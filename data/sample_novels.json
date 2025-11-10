@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "title": "회귀자의 마법은 특별해야 합니다",
+    "author": "유수민",
+    "description": "세계가 멸망한 날, 마법사 데지안 아르만은 과거로 회귀한다. 그가 얻은 두 번째 기회로 동료들을 구하고 세계를 구원할 수 있을 것인가?",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/54321001",
+    "keywords": ["회귀", "마법", "판타지", "성장", "학원"]
+  },
+  {
+    "id": 2,
+    "title": "전지적 독자 시점",
+    "author": "싱숑",
+    "description": "소설이 현실이 되어버린 세계. 유일하게 완결까지 읽은 독자 김독자는 이야기의 결말을 바꾸기 위해 움직인다.",
+    "platform": "네이버시리즈",
+    "url": "https://series.naver.com/novel/detail.series?productNo=5302121",
+    "keywords": ["현대판타지", "게임", "시스템", "빙의", "액션"]
+  },
+  {
+    "id": 3,
+    "title": "나 혼자만 레벨업",
+    "author": "추공",
+    "description": "세계 최약체 헌터 성진우. 던전에서 죽을 고비를 넘긴 후 플레이어의 능력을 얻게 되면서 유일하게 레벨업이 가능한 헌터가 된다.",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/51234567",
+    "keywords": ["헌터", "레벨업", "던전", "성장", "현대판타지"]
+  },
+  {
+    "id": 4,
+    "title": "달빛조각사",
+    "author": "남희성",
+    "description": "빚더미에 앉은 이현은 가상현실 게임 '로열로드'에서 조각사 위드가 되어 돈을 벌기 위한 여정을 시작한다.",
+    "platform": "문피아",
+    "url": "https://novel.munpia.com/23456",
+    "keywords": ["게임", "VRMMO", "조각사", "성장", "코미디"]
+  },
+  {
+    "id": 5,
+    "title": "소설 속 엑스트라",
+    "author": "Jee Gab Song",
+    "description": "어느 날 눈을 떠보니 내가 읽던 소설 속 엑스트라가 되어 있었다. 원작을 바꾸지 않기 위해 노력하지만...",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/59876543",
+    "keywords": ["빙의", "학원", "판타지", "엑스트라", "성장"]
+  },
+  {
+    "id": 6,
+    "title": "백수의 끝판왕",
+    "author": "아티팩트",
+    "description": "10년차 백수 유재준이 회귀하여 과거로 돌아간다. 이번 생엔 반드시 인생 역전을 이루겠다!",
+    "platform": "네이버시리즈",
+    "url": "https://series.naver.com/novel/detail.series?productNo=6789012",
+    "keywords": ["회귀", "현대", "재벌", "복수", "성장"]
+  },
+  {
+    "id": 7,
+    "title": "던전 디펜스",
+    "author": "유보라",
+    "description": "72명의 마왕 중 최약체 마왕 다눌탈리프로 빙의한 주인공. 약한 마왕이지만 지략으로 살아남는다.",
+    "platform": "조아라",
+    "url": "https://www.joara.com/book/1234567",
+    "keywords": ["빙의", "마왕", "전략", "다크판타지", "지략"]
+  },
+  {
+    "id": 8,
+    "title": "귀환자의 마법은 특별해야 합니다",
+    "author": "유수민",
+    "description": "그림자세계에서 돌아온 마법사들. 그들은 특별한 능력을 가지고 세상을 구하기 위해 싸운다.",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/51111111",
+    "keywords": ["마법", "판타지", "학원", "성장", "귀환자"]
+  },
+  {
+    "id": 9,
+    "title": "템빨",
+    "author": "우당탕탕",
+    "description": "게임 속 세계에서 유일한 능력은 템발. 좋은 아이템만 있으면 무적이 될 수 있다!",
+    "platform": "문피아",
+    "url": "https://novel.munpia.com/98765",
+    "keywords": ["게임", "판타지", "템빨", "코미디", "성장"]
+  },
+  {
+    "id": 10,
+    "title": "역대급 영지 설계사",
+    "author": "BK문태준",
+    "description": "건축학도 김수호는 판타지 세계 귀족 가문의 장남으로 빙의한다. 현대 건축 지식으로 영지를 발전시킨다.",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/52222222",
+    "keywords": ["빙의", "건축", "영지물", "판타지", "경영"]
+  },
+  {
+    "id": 11,
+    "title": "게임 속 바바리안으로 살아남기",
+    "author": "정진",
+    "description": "로그라이크 게임 속 바바리안으로 빙의했다. 머리가 나쁜 대신 힘은 세다. 무식하게 살아남자!",
+    "platform": "네이버시리즈",
+    "url": "https://series.naver.com/novel/detail.series?productNo=7777777",
+    "keywords": ["빙의", "게임", "바바리안", "액션", "성장"]
+  },
+  {
+    "id": 12,
+    "title": "사상최강",
+    "author": "낙서장인",
+    "description": "무림 최강자 검황은 현대로 환생한다. 무술은 사라졌지만 그의 힘은 여전히 최강이다.",
+    "platform": "조아라",
+    "url": "https://www.joara.com/book/2345678",
+    "keywords": ["환생", "현대무협", "최강자", "액션", "학원"]
+  },
+  {
+    "id": 13,
+    "title": "천마육성",
+    "author": "흑란",
+    "description": "천하제일인이 되기 위해 필요한 건 강한 스승. 주인공은 천마를 키워 세상 최강으로 만든다.",
+    "platform": "문피아",
+    "url": "https://novel.munpia.com/34567",
+    "keywords": ["무협", "육성", "천마", "액션", "성장"]
+  },
+  {
+    "id": 14,
+    "title": "재벌집 막내아들",
+    "author": "산경",
+    "description": "순양그룹 비서실 직원 윤현우는 배신당해 죽은 후, 재벌가 막내아들로 환생한다. 이번엔 모든 것을 내 것으로!",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/53333333",
+    "keywords": ["환생", "재벌", "현대", "복수", "경영"]
+  },
+  {
+    "id": 15,
+    "title": "역대급 영웅님이 회귀하셨다",
+    "author": "Shonan",
+    "description": "용사 카르세인은 마왕을 쓰러뜨린 후 배신당한다. 과거로 회귀한 그는 복수를 준비한다.",
+    "platform": "네이버시리즈",
+    "url": "https://series.naver.com/novel/detail.series?productNo=8888888",
+    "keywords": ["회귀", "영웅", "판타지", "복수", "액션"]
+  },
+  {
+    "id": 16,
+    "title": "전생했더니 슬라임이었던 건에 대하여",
+    "author": "후세",
+    "description": "평범한 회사원이었던 미카미 사토루는 이세계에서 슬라임으로 전생한다. 약한 몬스터지만 특별한 능력이 있다.",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/54444444",
+    "keywords": ["전생", "이세계", "슬라임", "판타지", "성장"]
+  },
+  {
+    "id": 17,
+    "title": "나는 귀환했다",
+    "author": "지뢰빙",
+    "description": "던전이 열린 세계. 던전에 갇혔던 김준호는 20년 만에 귀환하여 최강의 힘을 가지고 돌아온다.",
+    "platform": "조아라",
+    "url": "https://www.joara.com/book/3456789",
+    "keywords": ["귀환", "던전", "헌터", "현대판타지", "최강자"]
+  },
+  {
+    "id": 18,
+    "title": "별이 되려던 너에게",
+    "author": "셀피",
+    "description": "아이돌 연습생이었던 주인공이 과거로 회귀한다. 이번에는 반드시 데뷔해서 스타가 될 것이다.",
+    "platform": "네이버시리즈",
+    "url": "https://series.naver.com/novel/detail.series?productNo=9999999",
+    "keywords": ["회귀", "아이돌", "연예계", "현대", "성장"]
+  },
+  {
+    "id": 19,
+    "title": "천재 타자가 강속구에 빙의했다",
+    "author": "은벼리",
+    "description": "야구 천재 타자가 구속만 빠른 투수의 몸으로 빙의한다. 타자의 시각으로 투구를 발전시킨다.",
+    "platform": "카카오페이지",
+    "url": "https://page.kakao.com/content/55555555",
+    "keywords": ["빙의", "야구", "스포츠", "현대", "성장"]
+  },
+  {
+    "id": 20,
+    "title": "극한의 초인이 되었다",
+    "author": "김도환",
+    "description": "평범한 고등학생이었던 주인공은 외계 시스템을 얻어 초인이 된다. 지구를 지키기 위한 싸움이 시작된다.",
+    "platform": "문피아",
+    "url": "https://novel.munpia.com/45678",
+    "keywords": ["시스템", "초능력", "현대판타지", "액션", "성장"]
+  }
+]
