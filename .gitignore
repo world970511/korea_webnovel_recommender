@@ -34,9 +34,8 @@ wheels/
 *.swo
 *~
 
-# ChromaDB
-chroma_db/
-*.chroma
+# Database
+postgres_data/
 
 # Logs
 *.log

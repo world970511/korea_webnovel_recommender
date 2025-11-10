@@ -17,14 +17,22 @@ class Settings(BaseSettings):
     use_ollama: bool = False
     ollama_model: Optional[str] = None
 
-    # ChromaDB Configuration
-    chroma_persist_directory: str = "./chroma_db"
-    chroma_collection_name: str = "webnovels"
+    # PostgreSQL Configuration
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_db: str = "webnovel_db"
 
     # API Configuration
     max_query_length: int = 140
     default_search_limit: int = 10
     max_search_limit: int = 50
+
+    @property
+    def database_url(self) -> str:
+        """Generate PostgreSQL connection URL"""
+        return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     class Config:
         env_file = ".env"

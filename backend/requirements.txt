@@ -10,8 +10,10 @@ langchain-community==0.0.16
 langchain-huggingface==0.0.1
 sentence-transformers==2.3.1
 
-# Vector Database
-chromadb==0.4.22
+# PostgreSQL & Vector Database
+psycopg2-binary==2.9.9
+pgvector==0.2.5
+sqlalchemy==2.0.25
 
 # Utilities
 python-dotenv==1.0.0

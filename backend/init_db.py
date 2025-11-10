@@ -35,7 +35,7 @@ def main():
     print(f"✅ {len(novels)}개의 웹소설 데이터를 불러왔습니다.")
 
     # Initialize database
-    print("\n🔧 ChromaDB 초기화 중...")
+    print("\n🔧 PostgreSQL + PGVector 데이터베이스 초기화 중...")
     print("⚠️  이 과정은 임베딩 모델을 다운로드하므로 시간이 걸릴 수 있습니다.")
 
     try:

@@ -14,7 +14,7 @@
 - 🚀 **FastAPI 백엔드**: 빠르고 안정적인 RESTful API
 - 🎨 **Streamlit 프론트엔드**: 직관적이고 사용하기 쉬운 웹 인터페이스
 - 🤖 **LangChain 기반**: HuggingFace 또는 Ollama 임베딩 모델 지원
-- 💾 **ChromaDB**: 효율적인 벡터 검색
+- 💾 **PostgreSQL + PGVector**: 프로덕션 환경에 적합한 벡터 데이터베이스
 
 
 ## 🛠️ 기술 스택
@@ -23,7 +23,7 @@
 - **FastAPI**: 고성능 웹 프레임워크
 - **LangChain**: LLM 애플리케이션 개발 프레임워크
 - **HuggingFace Transformers**: 한국어 임베딩 모델 (`jhgan/ko-sroberta-multitask`)
-- **ChromaDB**: 벡터 데이터베이스
+- **PostgreSQL + PGVector**: 벡터 데이터베이스
 - **Pydantic**: 데이터 검증 및 설정 관리
 
 ### 프론트엔드
@@ -44,7 +44,23 @@ git clone <repository-url>
 cd korea_webnovel_recommender
 ```
 
-### 2. 자동 설치 (권장)
+### 2. PostgreSQL 설치 및 실행
+
+**Docker 사용 (권장)**
+```bash
+# Docker Compose로 PostgreSQL + PGVector 실행
+docker-compose up -d
+
+# 상태 확인
+docker-compose ps
+```
+
+**직접 설치**
+- PostgreSQL 14 이상 설치
+- PGVector 확장 설치
+- 데이터베이스 생성: `webnovel_db`
+
+### 3. 자동 설치 (권장)
 
 ```bash
 bash setup.sh
@@ -117,7 +133,7 @@ korea_webnovel_recommender/
 │   │   │   └── routes.py  # API 라우트
 │   │   └── services/
 │   │       ├── embedding.py   # 임베딩 서비스
-│   │       └── vector_db.py   # ChromaDB 서비스
+│   │       └── vector_db.py   # PostgreSQL + PGVector 서비스
 │   ├── init_db.py         # DB 초기화 스크립트
 │   └── requirements.txt
 ├── frontend/              # Streamlit 프론트엔드
@@ -125,7 +141,7 @@ korea_webnovel_recommender/
 │   └── requirements.txt
 ├── data/
 │   └── sample_novels.json # 샘플 웹소설 데이터
-├── chroma_db/            # ChromaDB 저장소 (자동 생성)
+├── docker-compose.yml     # PostgreSQL + PGVector Docker 설정
 ├── .env.example          # 환경 변수 템플릿
 ├── .gitignore
 ├── setup.sh              # 설치 스크립트
@@ -182,8 +198,12 @@ BACKEND_PORT=8000
 # 임베딩 모델 설정
 EMBEDDING_MODEL=jhgan/ko-sroberta-multitask
 
-# ChromaDB 설정
-CHROMA_PERSIST_DIRECTORY=./chroma_db
+# PostgreSQL 설정
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=webnovel_db
 
 # API 설정
 MAX_QUERY_LENGTH=140
@@ -221,16 +241,23 @@ curl -X POST http://localhost:8000/v1/admin/novels \
 
 ## 🐛 문제 해결
 
+### PostgreSQL 연결 실패
+- Docker Compose가 실행 중인지 확인: `docker-compose ps`
+- PostgreSQL이 포트 5432에서 실행 중인지 확인
+- `.env` 파일의 데이터베이스 설정 확인
+
 ### 백엔드 서버 연결 실패
 - 백엔드 서버가 실행 중인지 확인: http://localhost:8000/v1/health
 - 포트 8000이 이미 사용 중인지 확인
+- PostgreSQL 연결 상태 확인
 
 ### 임베딩 모델 다운로드 느림
 - 첫 실행 시 모델 다운로드로 시간이 걸릴 수 있습니다
 - 인터넷 연결 확인
 
-### ChromaDB 오류
-- `chroma_db/` 디렉토리 삭제 후 `python backend/init_db.py` 재실행
+### PGVector 확장 오류
+- PostgreSQL에서 PGVector 확장이 활성화되었는지 확인
+- Docker Compose 사용 시 자동으로 설치됨
 
 
 ## 📚 참고 자료
@@ -239,7 +266,8 @@ curl -X POST http://localhost:8000/v1/admin/novels \
 - [FastAPI 공식 문서](https://fastapi.tiangolo.com/)
 - [LangChain 공식 문서](https://python.langchain.com/)
 - [Streamlit 공식 문서](https://docs.streamlit.io/)
-- [ChromaDB 공식 문서](https://docs.trychroma.com/)
+- [PostgreSQL 공식 문서](https://www.postgresql.org/docs/)
+- [PGVector GitHub](https://github.com/pgvector/pgvector)
 
 
 ## 📝 라이선스
