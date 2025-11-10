@@ -286,6 +286,19 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r backend/requirements.txt
 ```
 
+### Windows: Microsoft Visual C++ Redistributable 오류
+**증상**: `Error loading "...\torch\lib\c10.dll"`, `Microsoft Visual C++ Redistributable is not installed`
+**해결**:
+1. [Microsoft Visual C++ Redistributable 다운로드](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+2. 설치 실행
+3. 완료 후 서버 재실행
+
+**대안** (Visual C++ 설치 없이):
+```bash
+# CPU 전용 PyTorch 설치
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+```
+
 ### PostgreSQL 연결 실패
 - Docker Compose가 실행 중인지 확인: `docker-compose ps`
 - PostgreSQL이 포트 5432에서 실행 중인지 확인
