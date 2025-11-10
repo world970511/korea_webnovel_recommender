@@ -11,7 +11,7 @@ langchain-huggingface==0.0.1
 sentence-transformers==2.3.1
 
 # PostgreSQL & Vector Database
-psycopg2-binary==2.9.9
+psycopg[binary]==3.1.18
 pgvector==0.2.5
 sqlalchemy==2.0.25
 
