@@ -1,0 +1,4 @@
+# Streamlit Frontend Dependencies
+streamlit==1.30.0
+requests==2.31.0
+pandas==2.1.4
