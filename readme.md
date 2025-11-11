@@ -31,11 +31,39 @@
 - **Requests**: HTTP 클라이언트
 
 ### 기타
-- **Python 3.8+**: 프로그래밍 언어
+- **Python 3.11 (권장)**: Python 3.11 또는 3.12 사용 권장 (3.13은 일부 패키지 호환성 문제 가능)
 - **Uvicorn**: ASGI 서버
+
+## ⚠️ 중요: Python 버전
+
+**Python 3.11 또는 3.12를 사용하세요.**
+
+Python 3.13은 아직 최신 버전이라 일부 패키지(numpy, psycopg 등)의 pre-built wheel이 없어 컴파일 오류가 발생할 수 있습니다.
+
+```bash
+# Python 버전 확인
+python --version
+
+# Python 3.11 또는 3.12가 아니라면 해당 버전 설치 필요
+```
 
 
 ## 📦 설치 및 실행
+
+### 0. Python 버전 확인 (중요!)
+
+```bash
+# Python 버전 확인
+python --version
+
+# 또는
+python3 --version
+```
+
+**Python 3.11 또는 3.12가 아니라면:**
+- Windows: [Python 3.11 다운로드](https://www.python.org/downloads/)
+- macOS: `brew install python@3.11`
+- Linux: `sudo apt install python3.11` 또는 `pyenv`로 버전 관리
 
 ### 1. 저장소 클론
 
@@ -240,6 +268,36 @@ curl -X POST http://localhost:8000/v1/admin/novels \
 
 
 ## 🐛 문제 해결
+
+### Python 3.13 컴파일 오류
+**증상**: `pg_config not found`, `Rust required`, `compiler not found` 등의 오류
+**해결**: Python 3.11 또는 3.12로 다운그레이드
+
+```bash
+# 현재 버전 확인
+python --version
+
+# Python 3.11 또는 3.12 설치 후
+# 새 가상환경 생성
+python3.11 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 패키지 재설치
+pip install -r backend/requirements.txt
+```
+
+### Windows: Microsoft Visual C++ Redistributable 오류
+**증상**: `Error loading "...\torch\lib\c10.dll"`, `Microsoft Visual C++ Redistributable is not installed`
+**해결**:
+1. [Microsoft Visual C++ Redistributable 다운로드](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+2. 설치 실행
+3. 완료 후 서버 재실행
+
+**대안** (Visual C++ 설치 없이):
+```bash
+# CPU 전용 PyTorch 설치
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+```
 
 ### PostgreSQL 연결 실패
 - Docker Compose가 실행 중인지 확인: `docker-compose ps`
