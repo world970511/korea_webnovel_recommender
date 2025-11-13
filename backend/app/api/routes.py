@@ -85,7 +85,7 @@ async def get_novel_detail(novel_id: int):
         Detailed novel information
     """
     try:
-        novel = vector_db_service.get_novel_by_id(str(novel_id))
+        novel = vector_db_service.get_novel_by_id(novel_id)
 
         if not novel:
             raise HTTPException(
@@ -229,7 +229,7 @@ async def get_similar_novels(novel_id: int, limit: int = Query(default=10, ge=1,
     """
     try:
         # Get the base novel
-        base_novel = vector_db_service.get_novel_by_id(str(novel_id))
+        base_novel = vector_db_service.get_novel_by_id(novel_id)
 
         if not base_novel:
             raise HTTPException(

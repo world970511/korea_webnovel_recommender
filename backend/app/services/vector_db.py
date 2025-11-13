@@ -1,9 +1,9 @@
 """
 Vector Database Service using PostgreSQL + PGVector
 """
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from pgvector.psycopg2 import register_vector
+import psycopg
+from psycopg.rows import dict_row
+from pgvector.psycopg import register_vector
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
@@ -26,13 +26,10 @@ class VectorDBService:
         """Get or create database connection"""
         if self._connection is None or self._connection.closed:
             try:
-                self._connection = psycopg2.connect(
-                    host=settings.postgres_host,
-                    port=settings.postgres_port,
-                    user=settings.postgres_user,
-                    password=settings.postgres_password,
-                    database=settings.postgres_db,
-                    cursor_factory=RealDictCursor
+                conn_string = f"host={settings.postgres_host} port={settings.postgres_port} user={settings.postgres_user} password={settings.postgres_password} dbname={settings.postgres_db}"
+                self._connection = psycopg.connect(
+                    conn_string,
+                    row_factory=dict_row
                 )
                 # Register pgvector type
                 register_vector(self._connection)

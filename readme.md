@@ -8,17 +8,11 @@
 사용자가 140자 이내의 자연어로 원하는 장르, 테마, 스토리를 설명하면, 의미적 유사도 기반 벡터 검색과 LLM을 활용하여 가장 적합한 웹소설을 추천하는 시스템입니다.
 
 ### 핵심 특징
-
 - 🔍 **자연어 검색**: "성장형 주인공이 나오는 다크판타지 소설" 같은 자연스러운 문장으로 검색
 - 🎯 **의미 기반 매칭**: 단순 키워드가 아닌 문맥의 의미를 이해하여 추천
-- 🚀 **FastAPI 백엔드**: 빠르고 안정적인 RESTful API
-- 🎨 **Streamlit 프론트엔드**: 직관적이고 사용하기 쉬운 웹 인터페이스
-- 🤖 **LangChain 기반**: HuggingFace 또는 Ollama 임베딩 모델 지원
-- 💾 **PostgreSQL + PGVector**: 프로덕션 환경에 적합한 벡터 데이터베이스
 
 
 ## 🛠️ 기술 스택
-
 ### 백엔드
 - **FastAPI**: 고성능 웹 프레임워크
 - **LangChain**: LLM 애플리케이션 개발 프레임워크
@@ -46,7 +40,7 @@ cd korea_webnovel_recommender
 
 ### 2. PostgreSQL 설치 및 실행
 
-**Docker 사용 (권장)**
+**Docker/podman 사용 (권장)**
 ```bash
 # Docker Compose로 PostgreSQL + PGVector 실행
 docker-compose up -d
@@ -76,7 +70,7 @@ bash setup.sh
 
 ```bash
 # 가상환경 생성 및 활성화
-python3 -m venv venv
+python3.10 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # 백엔드 의존성 설치

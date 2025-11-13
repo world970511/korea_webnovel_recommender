@@ -12,7 +12,7 @@ if [ ! -d "venv" ]; then
 fi
 
 # Activate virtual environment
-source venv/bin/activate
+source ./venv/bin/activate
 
 # Run backend
 echo "🚀 FastAPI 서버를 시작합니다..."
