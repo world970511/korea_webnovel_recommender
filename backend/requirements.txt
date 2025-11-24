@@ -20,3 +20,8 @@ sqlalchemy==2.0.25
 # Utilities
 python-dotenv==1.0.0
 python-multipart==0.0.6
+
+# Skyvern + Ollama (Optional - for web crawling)
+# Uncomment to enable crawler functionality
+# skyvern>=1.0.0
+# playwright>=1.40.0
