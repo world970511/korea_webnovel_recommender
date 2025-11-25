@@ -22,10 +22,10 @@ Skyvern + Ollama를 사용한 웹소설 크롤링 시스템 설정 및 사용 �
 - ✅ **LLM 기반 크롤링**: 비전 언어 모델이 웹사이트를 이해하고 상호작용
 - ✅ **로컬 실행**: Ollama로 비용 없이 로컬에서 실행
 - ✅ **다양한 UI 패턴 지원**:
-  - 네이버 시리즈: 페이지네이션
-  - 카카오페이지: 무한 스크롤
-  - 리디북스: 장르별 네비게이션
-- ✅ **성인 콘텐츠 지원**: 자동 로그인 및 인증 처리
+  - 네이버 시리즈: 페이지네이션 + 상세 페이지 진입
+  - 카카오페이지: 무한 스크롤 + 상세 페이지 진입
+  - 리디북스: 장르별 네비게이션 + 상세 페이지 진입
+- ✅ **상세 정보 수집**: 목록 페이지의 요약 정보가 아닌, 각 소설의 상세 페이지를 방문하여 전체 줄거리와 키워드 수집
 - ✅ **강건성**: HTML 구조 변경에도 유연하게 대응
 
 ### 지원 플랫폼
@@ -121,8 +121,10 @@ CRAWLER_DELAY_SECONDS=2
 # (선택) 성인 콘텐츠 접근을 위한 로그인 정보
 NAVER_USERNAME=your_naver_id
 NAVER_PASSWORD=your_password
+
 KAKAO_USERNAME=your_kakao_email
 KAKAO_PASSWORD=your_password
+
 RIDI_USERNAME=your_ridi_email
 RIDI_PASSWORD=your_password
 ```
@@ -144,37 +146,33 @@ curl http://localhost:11434/api/version
 ### 기본 사용법
 
 ```bash
-# 네이버 시리즈에서 판타지 장르 20개 수집
-python backend/crawl_novels.py --platform naver --genres 판타지 --limit 20
+# 네이버 시리즈 전체 목록에서 20개 수집 (상세 페이지 방문)
+python backend/crawl_novels.py --platform naver --limit 20
+# 네이버 시리즈가 가진 전체 데이터를 수집할 경우
+python backend/crawl_novels.py --platform naver 
 
-# 카카오페이지에서 로맨스, 판타지 각 30개씩 수집
-python backend/crawl_novels.py --platform kakao --genres "로맨스,판타지" --limit 30
+# 카카오페이지 전체 목록에서 30개 수집
+python backend/crawl_novels.py --platform kakao --limit 30
+# 카카오페이지가 가진 전체 데이터를 수집할 경우
+python backend/crawl_novels.py --platform kakao 
 
-# 리디북스에서 무협 소설 50개 수집
-python backend/crawl_novels.py --platform ridi --genres 무협 --limit 50
+# 리디북스에서 판타지소설 50개 수집 (로맨스/로맨스판타지/판타지/BL 장르 지정 가능)
+python backend/crawl_novels.py --platform ridi --genres 판타지 --limit 50
+# 리디북스가 가진 전체 데이터를 수집할 경우(장르지정x)
+python backend/crawl_novels.py --platform ridi 
 ```
 
-### 모든 플랫폼에서 수집
 
+### 신작 수집
 ```bash
-# 3개 플랫폼 모두에서 판타지 장르 수집
-python backend/crawl_novels.py --platform all --genres 판타지 --limit 20
-```
+# 카카오페이지 신작
+python backend/crawl_novels.py --platform kakao --special new --limit 20
 
-### 특별 콘텐츠 수집
+# 리디북스 판타지 신작
+python backend/crawl_novels.py --platform ridi --genres 판타지 --special new --limit 20
 
-```bash
-# 카카오페이지 실시간 랭킹
-python backend/crawl_novels.py --platform kakao --special ranking --limit 20
-
-# 리디북스 베스트셀러
-python backend/crawl_novels.py --platform ridi --special bestseller --limit 30
-
-# 네이버 시리즈 인기작
-python backend/crawl_novels.py --platform naver --special top --limit 20
-
-# 카카오페이지 완결작
-python backend/crawl_novels.py --platform kakao --special completed --limit 20
+# 네이버 시리즈 신작
+python backend/crawl_novels.py --platform naver --special new --limit 20
 ```
 
 ### 성인 콘텐츠 포함
@@ -193,98 +191,6 @@ python backend/crawl_novels.py --platform naver --genres 판타지 --limit 10 --
 
 ---
 
-## 플랫폼별 특징
-
-### 네이버 시리즈 (series.naver.com)
-
-**UI 패턴**: 페이지네이션 (1, 2, 3... 페이지 버튼)
-
-**지원 장르**:
-- 판타지
-- 현대판타지
-- 로맨스
-- 로맨스판타지
-- 무협
-- BL
-- 미스터리
-- 드라마
-
-**특징**:
-- 안정적인 페이지 구조
-- 빠른 크롤링 속도
-- 상세한 장르 분류
-
-**예시**:
-```bash
-python backend/crawl_novels.py --platform naver --genres "판타지,무협,로맨스" --limit 30
-```
-
----
-
-### 카카오페이지 (page.kakao.com)
-
-**UI 패턴**: 무한 스크롤 (스크롤 시 자동 로드)
-
-**지원 장르**:
-- 판타지
-- 현대판타지
-- 로맨스
-- 로맨스판타지
-- 무협
-- 미스터리
-- 드라마
-- BL
-
-**특징**:
-- 무한 스크롤 방식
-- 동적 콘텐츠 로딩
-- 이미지 풍부한 레이아웃
-
-**주의사항**:
-- 스크롤 대기 시간으로 인해 느릴 수 있음
-- limit를 너무 크게 설정하면 오래 걸림
-
-**예시**:
-```bash
-# 실시간 랭킹 크롤링
-python backend/crawl_novels.py --platform kakao --special ranking --limit 20
-
-# 완결 작품 크롤링
-python backend/crawl_novels.py --platform kakao --special completed --limit 30
-```
-
----
-
-### 리디북스 (ridibooks.com)
-
-**UI 패턴**: 장르별 네비게이션 (메뉴 탐색 필요)
-
-**지원 장르**:
-- 판타지
-- 현대판타지
-- 로맨스
-- 로맨스판타지
-- 무협
-- 미스터리
-- 라이트노벨
-- BL
-
-**특징**:
-- 복잡한 카테고리 구조
-- 상세한 도서 정보
-- 검색 기능 지원
-
-**특수 기능**:
-```bash
-# 키워드 검색
-# (코드에서 RidibooksCrawler.search_novels() 사용)
-
-# 신작 수집
-python backend/crawl_novels.py --platform ridi --special new --limit 20
-```
-
----
-
 ## 고급 사용법
 
 ### Python 코드에서 직접 사용
@@ -292,18 +198,17 @@ python backend/crawl_novels.py --platform ridi --special new --limit 20
 ```python
 import asyncio
 from backend.app.services.crawler.skyvern_client import SkyvernClient
-from backend.app.services.crawler.platforms.naver import NaverSeriesCrawler
+from backend.app.services.crawler.platforms.naver import NaverSeriesCrawlerEnhanced
 
 async def main():
     # Skyvern 클라이언트 초기화
     client = SkyvernClient()
 
-    # 네이버 크롤러 생성
-    crawler = NaverSeriesCrawler(client)
+    # 네이버 크롤러 생성 (Enhanced 버전)
+    crawler = NaverSeriesCrawlerEnhanced(client)
 
-    # 장르별 크롤링
-    novels = await crawler.crawl_genre(
-        genre="판타지",
+    # 전체 목록 크롤링 (상세 페이지 방문 포함)
+    novels = await crawler.crawl_all_novels(
         limit=20,
         include_adult=False
     )
@@ -311,6 +216,7 @@ async def main():
     # 결과 출력
     for novel in novels:
         print(f"{novel['title']} - {novel['author']}")
+        print(f"Description: {novel['description'][:100]}...")
 
 asyncio.run(main())
 ```
@@ -319,34 +225,22 @@ asyncio.run(main())
 
 ```python
 from backend.app.services.crawler.platforms.kakao import KakaoPageCrawler
-from backend.app.services.crawler.utils import (
-    filter_novels_by_keywords,
-    save_crawled_novels
-)
+from backend.app.services.crawler.utils import save_crawled_novels
 
-async def crawl_specific_novels():
+async def crawl_kakao_new_releases():
     client = SkyvernClient()
     crawler = KakaoPageCrawler(client)
 
-    # 여러 장르 수집
-    genres = ["판타지", "로맨스", "무협"]
-    all_novels = await crawler.crawl_multiple_genres(
-        genres=genres,
-        limit_per_genre=30,
+    # 신작 수집
+    novels = await crawler.crawl_new_releases(
+        limit=30,
         include_adult=False
     )
 
-    # 키워드 필터링
-    filtered = filter_novels_by_keywords(
-        all_novels,
-        required_keywords=["회귀", "성장"],
-        excluded_keywords=["19금", "성인"]
-    )
-
     # 데이터베이스 저장
-    await save_crawled_novels(filtered)
+    await save_crawled_novels(novels)
 
-    return filtered
+    return novels
 ```
 
 ---
