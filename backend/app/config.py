@@ -29,6 +29,25 @@ class Settings(BaseSettings):
     default_search_limit: int = 10
     max_search_limit: int = 50
 
+    # Skyvern + Ollama Configuration
+    enable_skyvern: bool = False
+    enable_ollama: bool = True
+    ollama_server_url: str = "http://localhost:11434"
+    skyvern_ollama_model: str = "qwen2.5:7b-instruct"
+
+    # Crawler Configuration
+    crawler_enabled: bool = False
+    crawler_batch_size: int = 20
+    crawler_delay_seconds: int = 2
+
+    # Platform Credentials (for adult content)
+    naver_username: Optional[str] = None
+    naver_password: Optional[str] = None
+    kakao_username: Optional[str] = None
+    kakao_password: Optional[str] = None
+    ridi_username: Optional[str] = None
+    ridi_password: Optional[str] = None
+
     @property
     def database_url(self) -> str:
         """Generate PostgreSQL connection URL"""
