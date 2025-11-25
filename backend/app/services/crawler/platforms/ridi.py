@@ -1,8 +1,6 @@
-"""
-Ridibooks Crawler
 
-Handles crawling from Ridibooks (ridibooks.com)
-which requires genre navigation through menus and categories.
+"""
+Ridi Crawler
 """
 
 import asyncio
@@ -20,19 +18,16 @@ class RidibooksCrawler(BaseCrawler):
     """
 
     BASE_URL = "https://ridibooks.com"
-    NOVEL_URL = "https://ridibooks.com/category/books/4000"  # Novel category
+    NOVEL_ALL_BASE_URL = "https://ridibooks.com/category/books/"  # 각 장르별 전체 페이지 BaseURL 마지막에 장르 ID를 붙여 이동
+    NOVEL_NEW_BASE_URL = "https://ridibooks.com/category/new-releases/"# 각 장르별 신작 페이지 BaseURL 마지막에 장르 ID를 붙여 이동
     LOGIN_URL = "https://ridibooks.com/account/login"
 
     # Genre mappings (Ridibooks category IDs)
     GENRE_MAP = {
-        "판타지": "4100",
-        "현대판타지": "4110",
-        "로맨스": "4200",
-        "로맨스판타지": "4210",
-        "무협": "4300",
-        "미스터리": "4400",
-        "라이트노벨": "4500",
-        "BL": "4600",
+        "로맨스": "1650",
+        "로맨스판타지": "6050",
+        "판타지": "1750",
+        "BL": "4150",
     }
 
     def __init__(self, skyvern_client):
@@ -40,14 +35,14 @@ class RidibooksCrawler(BaseCrawler):
         super().__init__(skyvern_client, "ridibooks")
         self.is_logged_in = False
 
-    async def crawl_genre(
+    async def crawl_all_novels(
         self,
         genre: str,
         limit: int = 20,
         include_adult: bool = False
     ) -> List[Dict]:
         """
-        Crawl novels from Ridibooks by genre.
+        각 장르 링크에 따라 데이터 수집
 
         Args:
             genre: Genre name in Korean
@@ -67,7 +62,7 @@ class RidibooksCrawler(BaseCrawler):
 
         # Get genre category ID
         category_id = self.GENRE_MAP.get(genre, "4100")
-        genre_url = f"{self.BASE_URL}/category/books/{category_id}"
+        genre_url = f"{self.NOVEL_ALL_BASE_URL}{category_id}"
 
         self.logger.info(f"Starting crawl of {genre} from {genre_url}")
 
@@ -82,28 +77,38 @@ class RidibooksCrawler(BaseCrawler):
 
         # Build prompt for genre navigation
         prompt = f"""
-        리디북스 {genre} 카테고리에서 웹소설을 수집하세요.
+        리디북스 {genre} 카테고리(전체 목록)에서 웹소설을 수집하세요.
 
-        단계:
-        1. {genre} 장르 카테고리로 이동
-        2. 카테고리 메뉴가 있다면 "웹소설" 또는 "판타지 소설" 등 관련 하위 카테고리 탐색
-        3. 현재 페이지의 모든 도서 정보 추출
-        4. "더보기" 버튼이나 페이지 번호를 클릭하여 다음 페이지로 이동
-        5. {limit}개의 소설을 수집할 때까지 3-4 반복
+        ⭐ 중요: 각 소설마다 상세 페이지에 들어가서 완전한 정보를 수집하세요!
 
-        각 도서마다 수집할 정보:
-        - 제목
-        - 저자/작가명
-        - 도서 설명 (없으면 생략)
-        - 상세 페이지 URL
-        - 장르/카테고리 태그
+        단계별 작업:
+
+        1. {genre} 장르 카테고리 페이지 진입
+           - '전체' 탭이 선택되어 있는지 확인 (URL 확인)
+
+        2. 목록에서 각 소설의 상세 페이지로 이동 (링크 클릭)
+           - 완전한 줄거리/시놉시스 수집
+           - 태그와 키워드 모두 수집
+
+        3. 목록 페이지로 돌아가기 (뒤로가기)
+
+        4. 다음 소설로 이동하여 2-3 반복
+
+        5. {limit}개 수집할 때까지 계속
+           - 페이지 하단의 페이지 번호(1, 2, 3...)나 '다음' 버튼을 클릭하여 이동
+
+        수집할 정보:
+        - 제목: 정확한 소설 제목
+        - 작가: 작가명 또는 필명
+        - 소개글: 상세 페이지의 전체 소개글
+        - URL: 상세 페이지 전체 주소
+        - 태그/키워드: #로 시작하는 태그, 장르 분류 등 모두
 
         주의사항:
-        - 만화나 e북이 아닌 웹소설만 수집
-        - 광고나 배너 제외
-        - 중복 제목 제거
+        - 반드시 상세 페이지에 들어가서 정보 수집!
+        - 광고나 배너 무시
+        - 중복 제목 제외
         {'- 19세 이상 콘텐츠 포함' if include_adult else '- 19세 이상 콘텐츠는 제외'}
-        - 각 페이지 로드 후 2초 대기
         """
 
         try:
@@ -115,7 +120,7 @@ class RidibooksCrawler(BaseCrawler):
                 data_extraction_goal="\n".join([
                     f"{k}: {v}" for k, v in extraction_schema.items()
                 ]),
-                max_steps=min(25, limit // 3 + 10)
+                max_steps=min(30, limit // 2 + 15) # Adjust steps based on limit
             )
 
             # Process extracted data
@@ -169,69 +174,39 @@ class RidibooksCrawler(BaseCrawler):
             self.logger.error(f"Login failed: {str(e)}")
             return False
 
-    async def crawl_bestsellers(self, limit: int = 20) -> List[Dict]:
+    async def crawl_new_releases(
+        self,
+        genre: str = "판타지",
+        limit: int = 20,
+        include_adult: bool = False
+    ) -> List[Dict]:
         """
-        Crawl bestselling novels.
+        리디북스 신작 소설 목록을 크롤링
 
         Args:
+            genre: Genre name to crawl new releases for
             limit: Number of novels to collect
+            include_adult: Whether to include adult content
 
         Returns:
             List of novel dictionaries
         """
-        url = f"{self.BASE_URL}/category/books/4000?order=bestseller"
-        self.logger.info("Crawling bestsellers from Ridibooks")
+        if include_adult and not self.is_logged_in:
+            self.logger.warning("Adult content requires login")
+            if settings.ridi_username and settings.ridi_password:
+                await self.login(settings.ridi_username, settings.ridi_password)
+            else:
+                self.logger.error("Ridibooks credentials not configured")
+                include_adult = False
 
-        extraction_schema = {
-            "title": "베스트셀러 제목",
-            "author": "작가",
-            "description": "소개",
-            "url": "링크",
-            "keywords": "장르",
-        }
+        # Get genre category ID
+        category_id = self.GENRE_MAP.get(genre, "1750") # Default to Fantasy if not found
+        
+        # Construct URL for New Releases in this genre
+        # Ridi structure: /category/new-releases/{category_id}
+        url = f"{self.NOVEL_NEW_BASE_URL}{category_id}"
 
-        prompt = f"""
-        리디북스 베스트셀러에서 웹소설 {limit}개를 수집하세요.
-
-        베스트셀러 순서대로 도서 정보를 추출하고,
-        필요하면 "더보기"를 클릭하여 더 많은 도서를 확인하세요.
-        """
-
-        try:
-            result = await self.client.extract_data(
-                url=url,
-                extraction_schema=extraction_schema,
-                navigation_steps=[
-                    "베스트셀러 정렬 확인",
-                    "웹소설 필터 적용 (있는 경우)",
-                    "도서 정보 추출"
-                ]
-            )
-
-            novels = [self.normalize_novel_data(r) for r in result[:limit]]
-            for novel in novels:
-                if "베스트셀러" not in novel["keywords"]:
-                    novel["keywords"].append("베스트셀러")
-
-            self.log_crawl_summary(novels)
-            return novels
-
-        except Exception as e:
-            self.logger.error(f"Failed to crawl bestsellers: {str(e)}")
-            return []
-
-    async def crawl_new_releases(self, limit: int = 20) -> List[Dict]:
-        """
-        Crawl newly released novels.
-
-        Args:
-            limit: Number of novels to collect
-
-        Returns:
-            List of novel dictionaries
-        """
-        url = f"{self.BASE_URL}/category/books/4000?order=recent"
-        self.logger.info("Crawling new releases from Ridibooks")
+        self.logger.info(f"Crawling new releases for {genre} from {url}")
 
         extraction_schema = {
             "title": "신작 제목",
@@ -242,21 +217,65 @@ class RidibooksCrawler(BaseCrawler):
         }
 
         prompt = f"""
-        리디북스 신간 목록에서 웹소설 {limit}개를 수집하세요.
+        리디북스 {genre} 카테고리의 '신작' 목록에서 웹소설을 수집하세요.
 
-        최신 출간 순서대로 도서 정보를 추출하세요.
+        ⭐ 중요: 각 소설마다 상세 페이지에 들어가서 완전한 정보를 수집하세요!
+
+        단계별 작업:
+
+        1. {genre} 신작 페이지 진입 ({url})
+
+        2. 각 소설의 상세 페이지로 이동 (링크 클릭)
+           - 완전한 줄거리/시놉시스 수집
+           - 태그와 키워드 모두 수집
+
+        3. 목록 페이지로 돌아가기 (뒤로가기)
+
+        4. 다음 소설로 이동하여 2-3 반복
+
+        5. {limit}개 수집할 때까지 계속
+           - 페이지 하단의 페이지 번호나 '다음' 버튼 클릭
+
+        수집할 정보:
+        - 제목: 정확한 소설 제목
+        - 작가: 작가명 또는 필명
+        - 소개글: 상세 페이지의 전체 소개글
+        - URL: 상세 페이지 전체 주소
+        - 태그/키워드: #로 시작하는 태그, 장르 분류 등 모두
+
+        주의사항:
+        - 반드시 상세 페이지에 들어가서 정보 수집!
+        - 광고나 배너 무시
+        - 중복 제목 제외
+        - '신작' 뱃지가 있거나 신작 목록에 있는 작품만 대상
+        {'- 19세 이상 콘텐츠 포함' if include_adult else '- 19세 이상 콘텐츠는 제외'}
         """
 
         try:
-            result = await self.client.extract_data(
+            result = await self.client.run_task(
                 url=url,
-                extraction_schema=extraction_schema
+                prompt=prompt,
+                navigation_goal=f"{genre} 신작 카테고리 탐색 및 웹소설 목록 접근",
+                data_extraction_goal="\n".join([
+                    f"{k}: {v}" for k, v in extraction_schema.items()
+                ]),
+                max_steps=min(30, limit // 2 + 15)
             )
 
-            novels = [self.normalize_novel_data(r) for r in result[:limit]]
-            for novel in novels:
-                if "신작" not in novel["keywords"]:
-                    novel["keywords"].append("신작")
+            raw_novels = result.get("extracted_data", [])
+            
+            novels = []
+            for raw_novel in raw_novels[:limit]:
+                try:
+                    normalized = self.normalize_novel_data(raw_novel)
+                    if "신작" not in normalized["keywords"]:
+                        normalized["keywords"].append("신작")
+                    if genre not in normalized["keywords"]:
+                        normalized["keywords"].append(genre)
+                    novels.append(normalized)
+                except Exception as e:
+                    self.logger.warning(f"Failed to normalize novel: {str(e)}")
+                    continue
 
             self.log_crawl_summary(novels)
             return novels
@@ -264,59 +283,4 @@ class RidibooksCrawler(BaseCrawler):
         except Exception as e:
             self.logger.error(f"Failed to crawl new releases: {str(e)}")
             return []
-
-    async def search_novels(
-        self,
-        query: str,
-        limit: int = 20
-    ) -> List[Dict]:
-        """
-        Search novels by keyword.
-
-        Args:
-            query: Search keyword
-            limit: Number of results to collect
-
-        Returns:
-            List of novel dictionaries
-        """
-        # URL encode the query
-        import urllib.parse
-        encoded_query = urllib.parse.quote(query)
-        url = f"{self.BASE_URL}/search?q={encoded_query}&what=book"
-
-        self.logger.info(f"Searching Ridibooks for: {query}")
-
-        extraction_schema = {
-            "title": "검색 결과 제목",
-            "author": "작가",
-            "description": "설명",
-            "url": "링크",
-            "keywords": "장르",
-        }
-
-        prompt = f"""
-        리디북스에서 "{query}" 키워드로 검색한 결과를 수집하세요.
-
-        검색 결과에서 웹소설만 선택하여 {limit}개까지 정보를 추출하세요.
-        만화나 이미지북은 제외하세요.
-        """
-
-        try:
-            result = await self.client.extract_data(
-                url=url,
-                extraction_schema=extraction_schema
-            )
-
-            novels = [self.normalize_novel_data(r) for r in result[:limit]]
-            # Add search query as keyword
-            for novel in novels:
-                if query not in novel["keywords"]:
-                    novel["keywords"].append(query)
-
-            self.log_crawl_summary(novels)
-            return novels
-
-        except Exception as e:
-            self.logger.error(f"Search failed: {str(e)}")
-            return []
+```

@@ -33,19 +33,19 @@ class BaseCrawler(ABC):
         self.logger = logging.getLogger(f"{__name__}.{platform_name}")
 
     @abstractmethod
-    async def crawl_genre(
+    async def crawl_all_novels(
         self,
-        genre: str,
-        limit: int = 20,
-        include_adult: bool = False
+        limit: int = 100,
+        include_adult: bool = False,
+        **kwargs
     ) -> List[Dict]:
         """
-        Crawl novels from a specific genre.
+        Crawl all novels from the platform.
 
         Args:
-            genre: Genre name (e.g., "판타지", "로맨스", "무협")
             limit: Maximum number of novels to collect
             include_adult: Whether to include adult content (requires login)
+            **kwargs: Additional platform-specific parameters (e.g., genre for Ridi)
 
         Returns:
             List of novel dictionaries with keys:
@@ -57,6 +57,59 @@ class BaseCrawler(ABC):
                 - keywords: List[str]
         """
         pass
+
+    async def crawl_new_releases(
+        self,
+        limit: int = 50,
+        include_adult: bool = False,
+        **kwargs
+    ) -> List[Dict]:
+        """
+        Crawl new release novels from the platform.
+
+        This is an optional method that platforms can override.
+        Default implementation falls back to crawl_all_novels.
+
+        Args:
+            limit: Maximum number of novels to collect
+            include_adult: Whether to include adult content
+            **kwargs: Additional platform-specific parameters
+
+        Returns:
+            List of novel dictionaries
+        """
+        self.logger.warning(
+            f"{self.platform_name} does not have specific new_releases crawler. "
+            "Falling back to crawl_all_novels."
+        )
+        return await self.crawl_all_novels(limit=limit, include_adult=include_adult, **kwargs)
+
+    async def crawl_genre(
+        self,
+        genre: str,
+        limit: int = 20,
+        include_adult: bool = False
+    ) -> List[Dict]:
+        """
+        Crawl novels from a specific genre.
+
+        This is an optional method for backward compatibility.
+        Default implementation calls crawl_all_novels with genre parameter.
+
+        Args:
+            genre: Genre name (e.g., "판타지", "로맨스", "무협")
+            limit: Maximum number of novels to collect
+            include_adult: Whether to include adult content (requires login)
+
+        Returns:
+            List of novel dictionaries
+        """
+        self.logger.info(f"Using crawl_all_novels with genre={genre}")
+        return await self.crawl_all_novels(
+            limit=limit,
+            include_adult=include_adult,
+            genre=genre
+        )
 
     @abstractmethod
     async def login(self, username: str, password: str) -> bool:
@@ -120,6 +173,8 @@ class BaseCrawler(ABC):
         """
         Crawl novels from multiple genres.
 
+        This method is useful for platforms like Ridi that require genre-based crawling.
+
         Args:
             genres: List of genre names
             limit_per_genre: Maximum novels per genre
@@ -133,10 +188,11 @@ class BaseCrawler(ABC):
         for genre in genres:
             try:
                 self.logger.info(f"Crawling {genre} genre from {self.platform_name}")
-                novels = await self.crawl_genre(
-                    genre=genre,
+                # Call crawl_all_novels with genre parameter
+                novels = await self.crawl_all_novels(
                     limit=limit_per_genre,
-                    include_adult=include_adult
+                    include_adult=include_adult,
+                    genre=genre
                 )
                 all_novels.extend(novels)
                 self.logger.info(f"Collected {len(novels)} novels from {genre}")
