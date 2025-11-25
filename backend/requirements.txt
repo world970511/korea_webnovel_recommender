@@ -1,3 +1,5 @@
+# Python 3.11 or 3.12 required (3.13 has package compatibility issues)
+
 # FastAPI Backend Dependencies
 fastapi==0.109.0
 uvicorn[standard]==0.27.0

@@ -38,6 +38,5 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = False
         extra = "ignore"
-
-
+        
 settings = Settings()
