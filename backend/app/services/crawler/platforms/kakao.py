@@ -10,13 +10,15 @@ from backend.app.config import settings
 
 class KakaoPageCrawler(BaseCrawler):
     """
-    Crawler for Kakao Page platform.
-    Kakao Page uses infinite scroll, requiring repeated scroll-down
-    actions to load more content dynamically.
+        카카오 페이지 크롤러.
+
+        목록 페이지의 간단한 정보만 수집하는 대신,
+        각 소설의 상세 페이지를 방문하여 완전한 정보를 수집합니다.
     """
 
     BASE_URL = "https://page.kakao.com"
-    NOVEL_URL = "https://page.kakao.com/menu/10011"  # Novel section
+    NOVEL_ALL_CATEGORY_URL = "https://page.kakao.com/menu/10011/screen/84"  # 웹소설 전체
+    NOVEL_ALL_CATEGORY_NEW = "https://page.kakao.com/menu/10011/screen/101"  # 웹소설 신작
     LOGIN_URL = "https://accounts.kakao.com/login"
 
     # Genre mappings
@@ -36,104 +38,6 @@ class KakaoPageCrawler(BaseCrawler):
         super().__init__(skyvern_client, "kakao_page")
         self.is_logged_in = False
 
-    async def crawl_genre(
-        self,
-        genre: str,
-        limit: int = 20,
-        include_adult: bool = False
-    ) -> List[Dict]:
-        """
-        Crawl novels from Kakao Page by genre.
-
-        Args:
-            genre: Genre name in Korean
-            limit: Maximum number of novels to collect
-            include_adult: Whether to include adult content (requires login)
-
-        Returns:
-            List of novel dictionaries
-        """
-        if include_adult and not self.is_logged_in:
-            self.logger.warning("Adult content requires login")
-            if settings.kakao_username and settings.kakao_password:
-                await self.login(settings.kakao_username, settings.kakao_password)
-            else:
-                self.logger.error("Kakao credentials not configured")
-                include_adult = False
-
-        # Get genre code
-        genre_code = self.GENRE_MAP.get(genre, "10")
-        genre_url = f"{self.BASE_URL}/menu/{genre_code}"
-
-        self.logger.info(f"Starting crawl of {genre} from {genre_url}")
-
-        # Define extraction schema
-        extraction_schema = {
-            "title": "웹소설 제목",
-            "author": "작가 이름 또는 필명",
-            "description": "소설 소개 또는 시놉시스",
-            "url": "작품 상세 페이지 링크",
-            "keywords": "장르, 태그, 키워드 (쉼표 구분)",
-        }
-
-        # Build prompt for infinite scroll handling
-        prompt = f"""
-        카카오페이지 {genre} 장르 페이지에서 웹소설을 수집하세요.
-
-        단계:
-        1. 페이지가 로드될 때까지 대기
-        2. 현재 화면에 보이는 모든 웹소설 정보 추출
-        3. 페이지를 아래로 스크롤하여 새로운 콘텐츠 로드
-        4. 새로 나타난 소설 정보 추출
-        5. {limit}개의 소설을 수집할 때까지 3-4 단계 반복
-        6. 더 이상 새로운 콘텐츠가 로드되지 않으면 중단
-
-        각 소설마다 수집할 정보:
-        - 제목
-        - 작가명
-        - 소설 설명/줄거리
-        - 상세 페이지 URL
-        - 장르 태그나 키워드
-
-        주의사항:
-        - 무한 스크롤이므로 천천히 스크롤
-        - 각 스크롤 후 1-2초 대기하여 콘텐츠 로딩 시간 확보
-        - 광고나 배너 제외
-        - 중복 제목 제거
-        {'- 19세 이상 콘텐츠 포함' if include_adult else '- 19세 이상 콘텐츠는 제외'}
-        """
-
-        try:
-            # Run Skyvern task with infinite scroll
-            result = await self.client.run_task(
-                url=genre_url,
-                prompt=prompt,
-                data_extraction_goal="\n".join([
-                    f"{k}: {v}" for k, v in extraction_schema.items()
-                ]),
-                max_steps=min(30, limit // 2 + 10)  # More steps for scrolling
-            )
-
-            # Process extracted data
-            raw_novels = result.get("extracted_data", [])
-
-            novels = []
-            for raw_novel in raw_novels[:limit]:
-                try:
-                    normalized = self.normalize_novel_data(raw_novel)
-                    if genre not in normalized["keywords"]:
-                        normalized["keywords"].append(genre)
-                    novels.append(normalized)
-                except Exception as e:
-                    self.logger.warning(f"Failed to normalize novel: {str(e)}")
-                    continue
-
-            self.log_crawl_summary(novels)
-            return novels
-
-        except Exception as e:
-            self.logger.error(f"Failed to crawl {genre}: {str(e)}")
-            return []
 
     async def login(self, username: str, password: str) -> bool:
         """
@@ -165,107 +69,200 @@ class KakaoPageCrawler(BaseCrawler):
             self.logger.error(f"Login failed: {str(e)}")
             return False
 
-    async def crawl_ranking(
-        self,
-        ranking_type: str = "realtime",
-        limit: int = 20
-    ) -> List[Dict]:
+    async def crawl_all_novels(self, limit: int = 100, include_adult: bool = False) -> List[Dict]:
         """
-        Crawl novels from Kakao Page ranking.
+        전체 소설 목록을 크롤링
 
         Args:
-            ranking_type: Type of ranking ("realtime", "weekly", "monthly")
             limit: Number of novels to collect
+            include_adult: Whether to include adult content (requires login)
 
         Returns:
             List of novel dictionaries
         """
-        ranking_urls = {
-            "realtime": f"{self.BASE_URL}/menu/10011?tab=ranking&type=realtime",
-            "weekly": f"{self.BASE_URL}/menu/10011?tab=ranking&type=weekly",
-            "monthly": f"{self.BASE_URL}/menu/10011?tab=ranking&type=monthly",
-        }
+        # 성인물 포함 시 로그인 확인
+        if include_adult and not self.is_logged_in:
+            self.logger.warning("Adult content requires login")
+            if settings.kakao_username and settings.kakao_password:
+                await self.login(settings.kakao_username, settings.kakao_password)
+            else:
+                self.logger.error("Kakao credentials not configured")
+                include_adult = False
 
-        url = ranking_urls.get(ranking_type, ranking_urls["realtime"])
-        self.logger.info(f"Crawling {ranking_type} ranking from Kakao Page")
+        url = self.NOVEL_ALL_CATEGORY_URL
+        self.logger.info(f"Crawling all novels from Kakao Page: {url}")
 
         extraction_schema = {
-            "title": "소설 제목",
+            "title": "웹소설 제목",
             "author": "작가 이름",
-            "description": "소설 설명",
-            "url": "소설 URL",
-            "keywords": "장르 태그",
+            "description": "소설 소개 또는 시놉시스",
+            "url": "작품 상세 페이지 링크",
+            "keywords": "장르, 태그, 키워드 (쉼표 구분)",
         }
 
         prompt = f"""
-        카카오페이지 {ranking_type} 랭킹에서 상위 {limit}개 웹소설을 수집하세요.
+        카카오페이지 전체 웹소설 목록에서 소설을 수집하세요.
 
-        랭킹 순서대로 소설의 제목, 작가, 설명, URL, 장르를 추출하세요.
-        필요하면 스크롤하여 더 많은 랭킹을 확인하세요.
+        ⭐ 중요: 목록 페이지에는 제목과 이미지만 있습니다. 반드시 각 소설의 상세 페이지에 들어가서 완전한 정보를 수집하세요!
+
+        단계별 작업:
+
+        1. 목록 페이지에서 소설 카드 확인
+           - 제목과 작가명 확인
+           - 상세 페이지 링크 찾기
+
+        2. 각 소설의 상세 페이지로 이동 (링크 클릭)
+           - 완전한 줄거리/시놉시스 수집
+           - 태그와 키워드 모두 수집
+
+        3. 목록 페이지로 돌아가기 (뒤로가기)
+
+        4. 다음 소설로 이동하여 2-3 반복
+
+        5. {limit}개 수집할 때까지 계속
+           - 무한 스크롤이 적용되어 있습니다. 페이지 맨 아래로 스크롤하여 새로운 콘텐츠를 로드하세요.
+           - 스크롤 후 1-2초 대기하여 로딩을 기다리세요.
+
+        수집할 정보:
+        - 제목: 정확한 소설 제목
+        - 작가: 작가명 또는 필명
+        - 소개글: 상세 페이지의 전체 소개글 (필수)
+        - URL: 상세 페이지 전체 주소
+        - 태그/키워드: 장르 태그나 키워드
+
+        주의사항:
+        - 반드시 상세 페이지에 들어가서 정보 수집!
+        - 무한 스크롤이므로 천천히 스크롤
+        - 각 스크롤 후 1-2초 대기하여 콘텐츠 로딩 시간 확보
+        - 광고나 배너 제외
+        - 중복 제목 제거
+        {'- 19세 이상 콘텐츠 포함' if include_adult else '- 19세 이상 콘텐츠는 제외'}
         """
 
         try:
-            result = await self.client.extract_data(
+            result = await self.client.run_task(
                 url=url,
-                extraction_schema=extraction_schema,
-                navigation_steps=[
-                    "랭킹 탭 클릭",
-                    f"{ranking_type} 랭킹 선택",
-                    "소설 정보 수집"
-                ]
+                prompt=prompt,
+                data_extraction_goal="\n".join([
+                    f"{k}: {v}" for k, v in extraction_schema.items()
+                ]),
+                max_steps=limit * 3
             )
 
-            novels = [self.normalize_novel_data(r) for r in result[:limit]]
+            raw_novels = result.get("extracted_data", [])
+            novels = []
+            for raw_novel in raw_novels[:limit]:
+                try:
+                    normalized = self.normalize_novel_data(raw_novel)
+                    novels.append(normalized)
+                except Exception as e:
+                    self.logger.warning(f"Failed to normalize novel: {str(e)}")
+                    continue
+
             self.log_crawl_summary(novels)
             return novels
 
         except Exception as e:
-            self.logger.error(f"Failed to crawl ranking: {str(e)}")
+            self.logger.error(f"Failed to crawl all novels: {str(e)}")
             return []
 
-    async def crawl_completed_novels(self, limit: int = 20) -> List[Dict]:
+    async def crawl_new_releases(self, limit: int = 50, include_adult: bool = False) -> List[Dict]:
         """
-        Crawl completed (finished) novels.
+        신작 소설 목록을 크롤링
 
         Args:
             limit: Number of novels to collect
+            include_adult: Whether to include adult content (requires login)
 
         Returns:
             List of novel dictionaries
         """
-        url = f"{self.BASE_URL}/menu/10011?tab=completed"
-        self.logger.info("Crawling completed novels from Kakao Page")
+        # 성인물 포함 시 로그인 확인
+        if include_adult and not self.is_logged_in:
+            self.logger.warning("Adult content requires login")
+            if settings.kakao_username and settings.kakao_password:
+                await self.login(settings.kakao_username, settings.kakao_password)
+            else:
+                self.logger.error("Kakao credentials not configured")
+                include_adult = False
+
+        url = self.NOVEL_ALL_CATEGORY_NEW
+        self.logger.info(f"Crawling new releases from Kakao Page: {url}")
 
         extraction_schema = {
-            "title": "완결 소설 제목",
-            "author": "작가",
-            "description": "줄거리",
-            "url": "링크",
-            "keywords": "장르",
+            "title": "웹소설 제목",
+            "author": "작가 이름",
+            "description": "소설 소개 또는 시놉시스",
+            "url": "작품 상세 페이지 링크",
+            "keywords": "장르, 태그, 키워드 (쉼표 구분)",
         }
 
         prompt = f"""
-        카카오페이지에서 완결된 웹소설 {limit}개를 수집하세요.
+        카카오페이지 신작 웹소설 목록에서 소설을 수집하세요.
 
-        완결 작품 탭에서 소설 정보를 추출하고,
-        무한 스크롤로 충분한 개수가 수집될 때까지 스크롤하세요.
+        ⭐ 중요: 목록 페이지에는 제목과 이미지만 있습니다. 반드시 각 소설의 상세 페이지에 들어가서 완전한 정보를 수집하세요!
+
+        단계별 작업:
+
+        1. 신작 탭의 목록 페이지에서 소설 카드 확인
+           - 제목과 작가명 확인
+           - 상세 페이지 링크 찾기
+
+        2. 각 소설의 상세 페이지로 이동 (링크 클릭)
+           - 완전한 줄거리/시놉시스 수집
+           - 태그와 키워드 모두 수집
+
+        3. 목록 페이지로 돌아가기 (뒤로가기)
+
+        4. 다음 소설로 이동하여 2-3 반복
+
+        5. 출간 정보가 서버 시간의 날짜보다 이전이면 수집 중단.
+           - 무한 스크롤이 적용되어 있습니다. 페이지 맨 아래로 스크롤하여 새로운 콘텐츠를 로드하세요.
+           - 스크롤 후 1-2초 대기하여 로딩을 기다리세요.
+
+        수집할 정보:
+        - 제목: 정확한 소설 제목
+        - 작가: 작가명 또는 필명
+        - 소개글: 상세 페이지의 전체 소개글 (필수)
+        - URL: 상세 페이지 전체 주소
+        - 태그/키워드: 장르 태그나 키워드
+
+        주의사항:
+        - 반드시 상세 페이지에 들어가서 정보 수집!
+        - 무한 스크롤이므로 천천히 스크롤
+        - 각 스크롤 후 1-2초 대기하여 콘텐츠 로딩 시간 확보
+        - 광고나 배너 제외
+        - 중복 제목 제거
+        - 최신 등록순으로 수집
+        {'- 19세 이상 콘텐츠 포함' if include_adult else '- 19세 이상 콘텐츠는 제외'}
         """
 
         try:
-            result = await self.client.extract_data(
+            result = await self.client.run_task(
                 url=url,
-                extraction_schema=extraction_schema
+                prompt=prompt,
+                data_extraction_goal="\n".join([
+                    f"{k}: {v}" for k, v in extraction_schema.items()
+                ]),
+                max_steps=limit * 3
             )
 
-            novels = [self.normalize_novel_data(r) for r in result[:limit]]
-            # Add "완결" keyword
-            for novel in novels:
-                if "완결" not in novel["keywords"]:
-                    novel["keywords"].append("완결")
+            raw_novels = result.get("extracted_data", [])
+            novels = []
+            for raw_novel in raw_novels[:limit]:
+                try:
+                    normalized = self.normalize_novel_data(raw_novel)
+                    # Add "신작" keyword
+                    if "신작" not in normalized["keywords"]:
+                        normalized["keywords"].append("신작")
+                    novels.append(normalized)
+                except Exception as e:
+                    self.logger.warning(f"Failed to normalize novel: {str(e)}")
+                    continue
 
             self.log_crawl_summary(novels)
             return novels
 
         except Exception as e:
-            self.logger.error(f"Failed to crawl completed novels: {str(e)}")
+            self.logger.error(f"Failed to crawl new releases: {str(e)}")
             return []

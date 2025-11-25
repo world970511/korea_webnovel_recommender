@@ -86,16 +86,60 @@ async def crawl_platform(
         logger.info(f"Available platforms: {', '.join(crawlers.keys())}")
         return []
 
-    # Crawl each genre
+    # Crawl logic
+    if not genres:
+        # If no genres specified, crawl all/default
+        if platform == "ridi":
+            # Ridi requires genre, so crawl all defined genres
+            genres = list(crawler.GENRE_MAP.keys())
+            logger.info(f"No genre specified for Ridi. Crawling all genres: {genres}")
+        elif hasattr(crawler, "crawl_all_novels"):
+            # Naver/Kakao support crawling all novels without genre
+            try:
+                logger.info(f"Crawling all novels from {platform}...")
+                novels = await crawler.crawl_all_novels(
+                    limit=limit,
+                    include_adult=include_adult
+                )
+                
+                # Clean and deduplicate
+                novels = clean_novel_data(novels)
+                novels = deduplicate_novels(novels)
+                
+                logger.info(f"Total unique novels collected: {len(novels)}")
+
+                if save_to_db and novels:
+                    saved_count = await save_crawled_novels(novels)
+                    logger.info(f"Saved {saved_count} novels to database")
+                
+                return novels
+            except Exception as e:
+                logger.error(f"Failed to crawl all novels: {str(e)}")
+                return []
+
+    # Crawl specific genres (or all genres for Ridi)
     all_novels = []
     for genre in genres:
         try:
             logger.info(f"Crawling {genre} from {platform}...")
-            novels = await crawler.crawl_genre(
-                genre=genre,
-                limit=limit,
-                include_adult=include_adult
-            )
+            
+            # Ridi uses crawl_all_novels with genre arg, others might use crawl_genre
+            if platform == "ridi":
+                novels = await crawler.crawl_all_novels(
+                    genre=genre,
+                    limit=limit,
+                    include_adult=include_adult
+                )
+            elif hasattr(crawler, "crawl_genre"):
+                novels = await crawler.crawl_genre(
+                    genre=genre,
+                    limit=limit,
+                    include_adult=include_adult
+                )
+            else:
+                logger.warning(f"Genre crawling not supported for {platform}. Using crawl_all_novels fallback.")
+                novels = await crawler.crawl_all_novels(limit=limit, include_adult=include_adult)
+
             all_novels.extend(novels)
             logger.info(f"Collected {len(novels)} novels from {genre}")
 
@@ -285,7 +329,8 @@ def main():
         parser.error("--platform is required")
 
     if not args.special and not args.genres:
-        parser.error("Either --genres or --special is required")
+        # If no genres/special specified, default to empty list (implies "all" for supported platforms)
+        pass
 
     # Parse genres
     genres = []
