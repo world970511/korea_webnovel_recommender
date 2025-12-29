@@ -20,12 +20,12 @@ from typing import List, Dict
 # Add backend to path
 sys.path.insert(0, "/home/user/korea_webnovel_recommender")
 
-from backend.app.config import settings
-from backend.app.services.crawler.skyvern_client import SkyvernClient
-from backend.app.services.crawler.platforms.naver import NaverSeriesCrawler
-from backend.app.services.crawler.platforms.kakao import KakaoPageCrawler
-from backend.app.services.crawler.platforms.ridi import RidibooksCrawler
-from backend.app.services.crawler.utils import (
+from app.config import settings
+from app.services.crawler.skyvern_client import SkyvernClient
+from app.services.crawler.platforms.naver import NaverSeriesCrawler
+from app.services.crawler.platforms.kakao import KakaoPageCrawler
+from app.services.crawler.platforms.ridi import RidibooksCrawler
+from app.services.crawler.utils import (
     save_crawled_novels,
     deduplicate_novels,
     get_crawl_statistics,

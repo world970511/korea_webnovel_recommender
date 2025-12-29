@@ -1,7 +1,7 @@
 """
 Base Crawler Class
 
-Provides common functionality for all platform-specific crawlers.
+모든 플랫폼의 베이스 크롤러
 """
 
 from abc import ABC, abstractmethod
@@ -13,22 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCrawler(ABC):
-    """
-    Abstract base class for platform-specific crawlers.
 
-    Each platform crawler should inherit from this class and implement
-    the required abstract methods.
-    """
-
-    def __init__(self, skyvern_client, platform_name: str):
+    def __init__(self, crawler_client, platform_name: str):
         """
-        Initialize the crawler.
+        크롤러 초기화
 
         Args:
-            skyvern_client: Configured Skyvern client instance
-            platform_name: Name of the platform (e.g., "naver", "kakao", "ridi")
+            crawler_client: 크롤러 클라이언트
+            platform_name: 플랫폼 이름
         """
-        self.client = skyvern_client
+        self.client = crawler_client
         self.platform_name = platform_name
         self.logger = logging.getLogger(f"{__name__}.{platform_name}")
 
@@ -40,12 +34,12 @@ class BaseCrawler(ABC):
         **kwargs
     ) -> List[Dict]:
         """
-        Crawl all novels from the platform.
+        플랫폼에서 모든 소설을 수집
 
         Args:
-            limit: Maximum number of novels to collect
-            include_adult: Whether to include adult content (requires login)
-            **kwargs: Additional platform-specific parameters (e.g., genre for Ridi)
+            limit: 수집할 소설의 최대 수
+            include_adult: 성인 콘텐츠 포함 여부
+            **kwargs: 플랫폼별 추가 매개변수
 
         Returns:
             List of novel dictionaries with keys:
@@ -65,15 +59,12 @@ class BaseCrawler(ABC):
         **kwargs
     ) -> List[Dict]:
         """
-        Crawl new release novels from the platform.
-
-        This is an optional method that platforms can override.
-        Default implementation falls back to crawl_all_novels.
+        플랫폼에서 새로운 소설을 수집
 
         Args:
-            limit: Maximum number of novels to collect
-            include_adult: Whether to include adult content
-            **kwargs: Additional platform-specific parameters
+            limit: 수집할 소설의 최대 수
+            include_adult: 성인 콘텐츠 포함 여부
+            **kwargs: 플랫폼별 추가 매개변수
 
         Returns:
             List of novel dictionaries
@@ -91,15 +82,12 @@ class BaseCrawler(ABC):
         include_adult: bool = False
     ) -> List[Dict]:
         """
-        Crawl novels from a specific genre.
-
-        This is an optional method for backward compatibility.
-        Default implementation calls crawl_all_novels with genre parameter.
+        플랫폼에서 특정 장르의 소설을 수집
 
         Args:
-            genre: Genre name (e.g., "판타지", "로맨스", "무협")
-            limit: Maximum number of novels to collect
-            include_adult: Whether to include adult content (requires login)
+            genre: 장르 이름 (e.g., "판타지", "로맨스", "무협")
+            limit: 수집할 소설의 최대 수
+            include_adult: 성인 콘텐츠 포함 여부
 
         Returns:
             List of novel dictionaries
@@ -114,26 +102,26 @@ class BaseCrawler(ABC):
     @abstractmethod
     async def login(self, username: str, password: str) -> bool:
         """
-        Login to the platform (required for adult content).
+        플랫폼에 로그인 (성인 콘텐츠를 위해 필요)
 
         Args:
-            username: Platform username
-            password: Platform password
+            username: 플랫폼 사용자 이름
+            password: 플랫폼 비밀번호
 
         Returns:
-            True if login successful, False otherwise
+            성공 여부
         """
         pass
 
     def normalize_novel_data(self, raw_data: Dict) -> Dict:
         """
-        Normalize raw crawled data to standard format.
+        크롤링된 데이터를 표준 형식으로 정규화
 
         Args:
-            raw_data: Raw data from Skyvern
+            raw_data: 크롤링된 데이터
 
         Returns:
-            Normalized novel dictionary
+            정규화된 소설 데이터
         """
         return {
             "title": raw_data.get("title", "").strip(),
@@ -146,13 +134,13 @@ class BaseCrawler(ABC):
 
     def _extract_keywords(self, raw_data: Dict) -> List[str]:
         """
-        Extract and clean keywords from raw data.
+        크롤링된 데이터에서 키워드를 추출하고 정리
 
         Args:
-            raw_data: Raw data from Skyvern
+            raw_data: 크롤링된 데이터
 
         Returns:
-            List of cleaned keywords
+            정리된 키워드 리스트
         """
         keywords = raw_data.get("keywords", [])
 
@@ -171,17 +159,17 @@ class BaseCrawler(ABC):
         include_adult: bool = False
     ) -> List[Dict]:
         """
-        Crawl novels from multiple genres.
+        여러 장르의 소설을 수집
 
         This method is useful for platforms like Ridi that require genre-based crawling.
 
         Args:
-            genres: List of genre names
-            limit_per_genre: Maximum novels per genre
-            include_adult: Whether to include adult content
+            genres: 장르 이름 리스트
+            limit_per_genre: 장르별로 수집할 소설의 최대 수
+            include_adult: 성인 콘텐츠 포함 여부
 
         Returns:
-            Combined list of novels from all genres
+            모든 장르의 소설 리스트
         """
         all_novels = []
 
@@ -203,7 +191,12 @@ class BaseCrawler(ABC):
         return all_novels
 
     def log_crawl_summary(self, novels: List[Dict]):
-        """Log summary of crawled data."""
+        """
+        크롤링된 데이터의 요약을 로그에 기록
+
+        Args:
+            novels: 크롤링된 소설 리스트
+        """
         self.logger.info(f"""
         Crawl Summary for {self.platform_name}:
         - Total novels: {len(novels)}

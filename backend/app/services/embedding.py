@@ -3,7 +3,7 @@ Embedding Service using LangChain
 """
 from typing import List
 from langchain_huggingface import HuggingFaceEmbeddings
-from backend.app.config import settings
+from ..config import settings
 
 
 class EmbeddingService:

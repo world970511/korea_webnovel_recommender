@@ -7,7 +7,7 @@ echo "======================================"
 # Create virtual environment
 if [ ! -d "venv" ]; then
     echo "📦 Python 가상환경을 생성합니다..."
-    python3 -m venv venv
+    python3.10 -m venv venv
     echo "✅ 가상환경 생성 완료"
 else
     echo "✅ 가상환경이 이미 존재합니다."

@@ -1,8 +1,8 @@
 # Python 3.11 or 3.12 required (3.13 has package compatibility issues)
 
 # FastAPI Backend Dependencies
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
+@
+uvicorn[standard]==0.27.0
 pydantic>=2.10.0
 pydantic-settings>=2.6.0
 
@@ -10,10 +10,10 @@ pydantic-settings>=2.6.0
 langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-huggingface>=0.1.0
-sentence-transformers>=2.3.1
+sentence-transformers==2.3.1
 
 # PostgreSQL & Vector Database
-psycopg[binary]>=3.2.0
+psycopg[binary]>=3.1.18
 pgvector==0.2.5
 sqlalchemy==2.0.25
 
@@ -21,7 +21,6 @@ sqlalchemy==2.0.25
 python-dotenv==1.0.0
 python-multipart==0.0.6
 
-# Skyvern + Ollama (Optional - for web crawling)
-# Uncomment to enable crawler functionality
-# skyvern>=1.0.0
-# playwright>=1.40.0
+# Crawler (Playwright + BeautifulSoup)
+playwright>=1.40.0
+beautifulsoup4>=4.12.0
