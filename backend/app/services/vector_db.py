@@ -8,8 +8,8 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 
-from backend.app.config import settings
-from backend.app.services.embedding import embedding_service
+from ..config import settings
+from ..services.embedding import embedding_service
 
 logger = logging.getLogger(__name__)
 

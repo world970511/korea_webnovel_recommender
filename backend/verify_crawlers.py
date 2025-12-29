@@ -1,6 +1,6 @@
 import asyncio
 import inspect
-from backend.app.services.crawler.platforms.naver import NaverSeriesCrawlerEnhanced
+from backend.app.services.crawler.platforms.naver import NaverSeriesCrawler
 from backend.app.services.crawler.platforms.kakao import KakaoPageCrawler
 from backend.app.services.crawler.platforms.ridi import RidibooksCrawler
 
@@ -14,7 +14,7 @@ async def verify_crawlers():
 
     # 1. Verify Naver Crawler
     print("\n[Naver Crawler]")
-    naver = NaverSeriesCrawlerEnhanced(client)
+    naver = NaverSeriesCrawler(client)
     
     # Check methods
     assert hasattr(naver, 'crawl_all_novels')

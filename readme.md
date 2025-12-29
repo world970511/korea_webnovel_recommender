@@ -27,21 +27,11 @@
 ### 기타
 - **Python 3.11 (권장)**: Python 3.11 또는 3.12 사용 권장 (3.13은 일부 패키지 호환성 문제 가능)
 - **Uvicorn**: ASGI 서버
-- **skyvern**: 데이터 크롤러
 
 ## ⚠️ 중요: Python 버전
 
 **Python 3.11 또는 3.12를 사용하세요.**
-
 Python 3.13은 아직 최신 버전이라 일부 패키지(numpy, psycopg 등)의 pre-built wheel이 없어 컴파일 오류가 발생할 수 있습니다.
-
-```bash
-# Python 버전 확인
-python --version
-
-# Python 3.11 또는 3.12가 아니라면 해당 버전 설치 필요
-```
-
 
 ## 📦 설치 및 실행
 
@@ -77,61 +67,6 @@ docker-compose up -d
 # 상태 확인
 docker-compose ps
 ```
-
-**직접 설치**
-- PostgreSQL 14 이상 설치
-- PGVector 확장 설치
-- 데이터베이스 생성: `webnovel_db`
-
-### 3. 자동 설치 (권장)
-
-```bash
-bash setup.sh
-```
-
-이 스크립트는 다음 작업을 자동으로 수행합니다:
-- Python 가상환경 생성
-- 필요한 패키지 설치
-- 환경 설정 파일 생성
-- 데이터베이스 초기화 (선택 사항)
-
-### 3. 수동 설치
-
-```bash
-# 가상환경 생성 및 활성화
-python3.10 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 백엔드 의존성 설치
-pip install -r backend/requirements.txt
-
-# 프론트엔드 의존성 설치
-pip install -r frontend/requirements.txt
-
-# 환경 설정 파일 복사
-cp .env.example .env
-
-# 데이터베이스 초기화
-cd backend
-python init_db.py
-cd ..
-```
-
-### 4. 서버 실행
-
-**백엔드 서버** (터미널 1):
-```bash
-bash run_backend.sh
-```
-- 서버 주소: http://localhost:8000
-- API 문서: http://localhost:8000/docs
-
-**프론트엔드 서버** (터미널 2):
-```bash
-bash run_frontend.sh
-```
-- 앱 주소: http://localhost:8501
-
 
 ## 🎮 사용 방법
 
@@ -173,7 +108,6 @@ korea_webnovel_recommender/
 └── readme.md
 ```
 
-
 ## 🔌 API 엔드포인트
 
 ### 소설 검색
@@ -188,129 +122,11 @@ GET /v1/novels/{novel_id}
 ```
 특정 소설의 상세 정보 조회
 
-### 인기 키워드
-```
-GET /v1/keywords/popular
-```
-자주 검색되는 키워드 목록
-
-### 유사 소설 추천
-```
-GET /v1/novels/{novel_id}/similar
-```
-특정 소설과 유사한 다른 소설 추천
-
-### 플랫폼별 소설 목록
-```
-GET /v1/novels?platform={platform}&page={page}&limit={limit}
-```
-플랫폼별 소설 목록 조회
-
-자세한 API 문서는 http://localhost:8000/docs 에서 확인하세요.
-
-
-## ⚙️ 환경 설정
-
-`.env` 파일에서 다음 설정을 변경할 수 있습니다:
-
-```env
-# 백엔드 설정
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
-
-# 임베딩 모델 설정
-EMBEDDING_MODEL=jhgan/ko-sroberta-multitask
-
-# PostgreSQL 설정
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=webnovel_db
-
-# API 설정
-MAX_QUERY_LENGTH=140
-DEFAULT_SEARCH_LIMIT=10
-MAX_SEARCH_LIMIT=50
-```
-
-
-## 🎨 커스터마이징
-
-### 새로운 소설 추가
-
-1. `data/sample_novels.json` 파일 수정 또는
-2. Admin API 엔드포인트 사용:
-
-```bash
-curl -X POST http://localhost:8000/v1/admin/novels \
-  -H "Content-Type: application/json" \
-  -d '[{
-    "title": "소설 제목",
-    "author": "작가명",
-    "description": "소설 설명",
-    "platform": "플랫폼명",
-    "url": "https://...",
-    "keywords": ["키워드1", "키워드2"]
-  }]'
-```
-
 ### 임베딩 모델 변경
 
 `.env` 파일에서 `EMBEDDING_MODEL` 변경:
 - HuggingFace: `jhgan/ko-sroberta-multitask` (기본값)
 - 다른 한국어 모델: `sentence-transformers/xlm-r-100langs-bert-base-nli-stsb-mean-tokens`
-
-
-## 🐛 문제 해결
-
-### Python 3.13 컴파일 오류
-**증상**: `pg_config not found`, `Rust required`, `compiler not found` 등의 오류
-**해결**: Python 3.11 또는 3.12로 다운그레이드
-
-```bash
-# 현재 버전 확인
-python --version
-
-# Python 3.11 또는 3.12 설치 후
-# 새 가상환경 생성
-python3.11 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 패키지 재설치
-pip install -r backend/requirements.txt
-```
-
-### Windows: Microsoft Visual C++ Redistributable 오류
-**증상**: `Error loading "...\torch\lib\c10.dll"`, `Microsoft Visual C++ Redistributable is not installed`
-**해결**:
-1. [Microsoft Visual C++ Redistributable 다운로드](https://aka.ms/vs/17/release/vc_redist.x64.exe)
-2. 설치 실행
-3. 완료 후 서버 재실행
-
-**대안** (Visual C++ 설치 없이):
-```bash
-# CPU 전용 PyTorch 설치
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-```
-
-### PostgreSQL 연결 실패
-- Docker Compose가 실행 중인지 확인: `docker-compose ps`
-- PostgreSQL이 포트 5432에서 실행 중인지 확인
-- `.env` 파일의 데이터베이스 설정 확인
-
-### 백엔드 서버 연결 실패
-- 백엔드 서버가 실행 중인지 확인: http://localhost:8000/v1/health
-- 포트 8000이 이미 사용 중인지 확인
-- PostgreSQL 연결 상태 확인
-
-### 임베딩 모델 다운로드 느림
-- 첫 실행 시 모델 다운로드로 시간이 걸릴 수 있습니다
-- 인터넷 연결 확인
-
-### PGVector 확장 오류
-- PostgreSQL에서 PGVector 확장이 활성화되었는지 확인
-- Docker Compose 사용 시 자동으로 설치됨
 
 
 ## 📚 참고 자료
@@ -323,12 +139,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 - [PGVector GitHub](https://github.com/pgvector/pgvector)
 
 
-## 📝 라이선스
+## 📝 과정 기록
+1) https://world970511.github.io/blog/posts/2025-11-27-korea-webnovel-recommender-1.html
+2) https://world970511.github.io/blog/posts/2027-11-27-korea-webnovel-recommender-2.html
 
-MIT License
-
-
-## 👥 기여
-
-이슈와 풀 리퀘스트는 언제나 환영합니다!
 

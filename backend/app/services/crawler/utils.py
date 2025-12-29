@@ -6,7 +6,7 @@ Helper functions and utilities for crawler operations.
 
 import logging
 from typing import List, Dict
-from backend.app.services.vector_db import vector_db_service
+from ..vector_db import vector_db_service
 
 logger = logging.getLogger(__name__)
 
