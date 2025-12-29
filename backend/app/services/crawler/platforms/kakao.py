@@ -63,6 +63,7 @@ class KakaoPageCrawler(BaseCrawler):
         Returns:
             수집된 소설 리스트
         """
+        # 성인물 포함 시 로그인 확인
         if include_adult and not self.is_logged_in:
             self.logger.warning("Adult content requires login")
             if settings.kakao_username and settings.kakao_password:
