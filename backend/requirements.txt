@@ -1,7 +1,6 @@
 # Python 3.11 or 3.12 required (3.13 has package compatibility issues)
 
 # FastAPI Backend Dependencies
-@
 uvicorn[standard]==0.27.0
 pydantic>=2.10.0
 pydantic-settings>=2.6.0
