@@ -161,6 +161,8 @@ class BaseCrawler(ABC):
         """
         여러 장르의 소설을 수집
 
+        This method is useful for platforms like Ridi that require genre-based crawling.
+
         Args:
             genres: 장르 이름 리스트
             limit_per_genre: 장르별로 수집할 소설의 최대 수

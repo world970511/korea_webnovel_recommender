@@ -69,6 +69,7 @@ class NaverSeriesCrawler(BaseCrawler):
         Returns:
             List of novel dictionaries
         """
+        # 성인물 포함 시 로그인 확인
         if include_adult and not self.is_logged_in:
             self.logger.warning("Adult content requires login")
             if settings.naver_username and settings.naver_password:
