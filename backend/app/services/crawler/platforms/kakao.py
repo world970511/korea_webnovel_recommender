@@ -19,23 +19,30 @@ class KakaoPageCrawler(BaseCrawler):
     NOVEL_ALL_CATEGORY_NEW = "https://page.kakao.com/menu/10011/screen/101"  # 웹소설 신작
     LOGIN_URL = "https://accounts.kakao.com/login"
 
-    # CSS Selectors - 실제 웹 구조에 맞게 수정 필요
+    # CSS Selectors - 카카오페이지 실제 HTML 구조에 맞춤
     SELECTORS = {
         "list": {
-            # href에 /content/가 포함된 a 태그
-            "item": "xpath://a[contains(@href, '/content/')]",
-            
-            # a 태그 내부의 제목 (font-small1 클래스)
-            "title": "xpath:.//div[contains(@class, 'font-small1')]",
-            
-            # a 태그의 href 속성
+            # 무한 스크롤 리스트 내의 각 작품 링크 (href에 /content/ 포함)
+            "item": "a.cursor-pointer[href*='/content/']",
+
+            # 작품 제목 (font-small1 클래스를 가진 div)
+            "title": "div.font-small1",
+
+            # 작품 상세 페이지 URL
             "url": "xpath:.//@href",
         },
         "detail": {
-            "genre": "xpath://h1[contains(@class, 'title')]",
-            "author": "xpath://span[contains(@class, 'author')]",
-            "description": "xpath://div[contains(@class, 'synopsis') or contains(@class, 'summary')]",
-            "keywords": "xpath://span[contains(@class, 'tag') or contains(@class, 'genre')][multiple]",
+            # 장르: <span class="break-all align-middle">현판</span>
+            "genre": "span.break-all.align-middle",
+
+            # 작가: <span class="font-small2 mb-6pxr text-ellipsis text-el-70 opacity-70 break-word-anywhere line-clamp-2">글먼지</span>
+            "author": "span.font-small2.mb-6pxr.text-ellipsis.text-el-70.opacity-70",
+
+            # 줄거리: <span class="font-small1 mb-8pxr block whitespace-pre-wrap break-words text-el-70">
+            "description": "span.font-small1.mb-8pxr.block.whitespace-pre-wrap.break-words.text-el-70",
+
+            # 키워드: <span class="font-small2-bold text-ellipsis text-el-70 line-clamp-1">#성장</span> (복수)
+            "keywords": "xpath://span[contains(@class, 'font-small2-bold') and contains(text(), '#')][multiple]",
         }
     }
 
