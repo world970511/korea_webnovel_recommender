@@ -5,10 +5,10 @@ This module provides web scraping capabilities using traditional CSS selectors
 for multiple Korean web novel platforms with different UI patterns.
 """
 
-from .traditional_crawler_client import TraditionalCrawlerClient
+from .crawler_client import CrawlerClient
 from .base import BaseCrawler
 
 # Backward compatibility
-CrawlerClient = TraditionalCrawlerClient
+CrawlerClient = CrawlerClient
 
-__all__ = ["TraditionalCrawlerClient", "CrawlerClient", "BaseCrawler"]
+__all__ = ["CrawlerClient", "BaseCrawler"]

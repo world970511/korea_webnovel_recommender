@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""
-Novel Crawler CLI
-
-Command-line interface for crawling web novels from various platforms
-using Skyvern + Ollama integration.
-
-Usage:
-    python backend/crawl_novels.py --platform naver --genre 판타지 --limit 20
-    python backend/crawl_novels.py --all --genres 판타지,로맨스 --limit 50
-    python backend/crawl_novels.py --platform kakao --ranking realtime
-"""
-
 import asyncio
 import argparse
 import logging
@@ -21,7 +9,7 @@ from typing import List, Dict
 sys.path.insert(0, "/home/user/korea_webnovel_recommender")
 
 from app.config import settings
-from app.services.crawler.skyvern_client import SkyvernClient
+from app.services.crawler.crawler_client import CrawlerClient
 from app.services.crawler.platforms.naver import NaverSeriesCrawler
 from app.services.crawler.platforms.kakao import KakaoPageCrawler
 from app.services.crawler.platforms.ridi import RidibooksCrawler
@@ -63,10 +51,9 @@ async def crawl_platform(
     logger.info(f"Starting crawl: platform={platform}, genres={genres}, limit={limit}")
 
     # Initialize Skyvern client
-    client = SkyvernClient()
+    client = CrawlerClient()
 
     if not client.is_available():
-        logger.error("Skyvern is not available. Check configuration.")
         logger.info("Make sure to:")
         logger.info("1. Install Skyvern: pip install skyvern")
         logger.info("2. Install Ollama and run: ollama pull qwen2.5:7b-instruct")

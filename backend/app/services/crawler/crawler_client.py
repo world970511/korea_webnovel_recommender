@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 
-class TraditionalCrawlerClient:
+class CrawlerClient:
     """
     BeautifulSoup + Playwright Selectors 로 데이터 수집
     """
@@ -19,11 +19,45 @@ class TraditionalCrawlerClient:
         Args:
             headless: Run browser in headless mode
         """
+
         self.headless = headless
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
+        self._playwright_context = None
 
+    async def _ensure_browser(self):
+        """Ensure browser is initialized"""
+        if self.browser is None:
+            self._playwright_context = await async_playwright().start()
+            self.browser = await self._playwright_context.chromium.launch(
+                headless=self.headless
+            )
+            self.context = await self.browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+
+    async def create_page(self) -> Page:
+        """Create a new page"""
+        await self._ensure_browser()
+        return await self.context.new_page()
+
+    async def close(self):
+        """Close browser and cleanup"""
+        if self.context:
+            await self.context.close()
+        if self.browser:
+            await self.browser.close()
+        if self._playwright_context:
+            await self._playwright_context.stop()
+        
+        self.context = None
+        self.browser = None
+        self._playwright_context = None
+
+
+    #전통적인 selector 기반 크롤링 (CSS Selector 또는 XPath)
     async def navigate_and_extract(
         self,
         url: str,
@@ -35,8 +69,6 @@ class TraditionalCrawlerClient:
         wait_time: float = 2.0
     ) -> List[Dict]:
         """
-        전통적인 selector 기반 크롤링 (CSS Selector 또는 XPath)
-
         Args:
             url: 크롤링할 URL
             list_selector: 소설 목록 아이템의 selector
@@ -85,6 +117,7 @@ class TraditionalCrawlerClient:
         logger.info(f"Extracted {len(results)} items")
         return results
 
+    # 무한 스크롤 방식으로 데이터 추출
     async def _extract_with_scroll(
         self,
         page: Page,
@@ -93,7 +126,6 @@ class TraditionalCrawlerClient:
         limit: int,
         wait_time: float
     ) -> List[Dict]:
-        """무한 스크롤 방식으로 데이터 추출"""
         results = []
         previous_count = 0
         no_new_items_count = 0
@@ -138,6 +170,7 @@ class TraditionalCrawlerClient:
 
         return results[:limit]
 
+    #페이지네이션 방식으로 데이터 추출
     async def _extract_with_pagination(
         self,
         page: Page,
@@ -147,7 +180,6 @@ class TraditionalCrawlerClient:
         next_button_selector: str,
         wait_time: float
     ) -> List[Dict]:
-        """페이지네이션 방식으로 데이터 추출"""
         results = []
         page_num = 1
 
@@ -190,6 +222,8 @@ class TraditionalCrawlerClient:
 
         return results[:limit]
 
+
+    #CSS Selector 또는 XPath로 여러 요소 선택
     def _select_elements(self, soup, selector: str) -> list:
         """
         CSS Selector 또는 XPath로 여러 요소 선택
@@ -221,10 +255,9 @@ class TraditionalCrawlerClient:
             # CSS Selector 방식
             return soup.select(selector)
 
+    #selector로 필드 추출
     def _extract_field(self, element, selector: str) -> Any:
         """
-        selector로 필드 추출
-
         selector 형식:
         CSS Selector:
         - "div.class" : 텍스트 추출
@@ -259,10 +292,9 @@ class TraditionalCrawlerClient:
         el = element.select_one(selector)
         return el.get_text(strip=True) if el else ""
 
+    #XPath로 필드 추출
     def _extract_by_xpath(self, element, xpath: str) -> Any:
         """
-        XPath로 필드 추출
-
         Args:
             element: BeautifulSoup element
             xpath: XPath 표현식
@@ -313,6 +345,7 @@ class TraditionalCrawlerClient:
             logger.warning(f"XPath extraction failed: {xpath}, error: {e}")
             return ""
 
+    #상세 페이지 정보 추출
     async def extract_detail_page(
         self,
         url: str,
@@ -322,8 +355,6 @@ class TraditionalCrawlerClient:
         wait_after_tab_click: float = 1.0
     ) -> Dict:
         """
-        상세 페이지 정보 추출
-
         Args:
             url: 상세 페이지 URL
             field_selectors: 추출할 필드의 selector 딕셔너리
@@ -362,6 +393,7 @@ class TraditionalCrawlerClient:
 
         return result
 
+    #사이트 로그인
     async def login_to_site(
         self,
         url: str,
@@ -372,8 +404,6 @@ class TraditionalCrawlerClient:
         login_button_selector: str = "button[type='submit']"
     ) -> bool:
         """
-        사이트 로그인
-
         Args:
             url: 로그인 페이지 URL
             username: 사용자 이름

@@ -22,20 +22,24 @@ class KakaoPageCrawler(BaseCrawler):
     # CSS Selectors - 실제 웹 구조에 맞게 수정 필요
     SELECTORS = {
         "list": {
-            # href에 /content/가 포함된 a 태그
-            "item": "xpath://a[contains(@href, '/content/')]",
+            # 각 작품 아이템
+            "item": "a.cursor-pointer[href*='/content/']",
             
-            # a 태그 내부의 제목 (font-small1 클래스)
-            "title": "xpath:.//div[contains(@class, 'font-small1')]",
+            # 제목
+            "title": "div.font-small1",
             
-            # a 태그의 href 속성
+            # URL: href 속성
             "url": "xpath:.//@href",
         },
         "detail": {
-            "genre": "xpath://h1[contains(@class, 'title')]",
-            "author": "xpath://span[contains(@class, 'author')]",
-            "description": "xpath://div[contains(@class, 'synopsis') or contains(@class, 'summary')]",
-            "keywords": "xpath://span[contains(@class, 'tag') or contains(@class, 'genre')][multiple]",
+            # 장르
+            "genre": "span.break-all.align-middle",
+            # 작가
+            "author": "span.font-small2.mb-6pxr.text-ellipsis.text-el-70.opacity-70",
+            # 줄거리
+            "description": "span.font-small1.mb-8pxr.block.whitespace-pre-wrap.break-words.text-el-70",
+            # 키워드
+            "keywords": "xpath://span[contains(@class, 'font-small2-bold') and contains(text(), '#')][multiple]",
         }
     }
 
@@ -165,7 +169,6 @@ class KakaoPageCrawler(BaseCrawler):
             list_selector=self.SELECTORS["list"]["item"],
             field_selectors={
                 "title": self.SELECTORS["list"]["title"],
-                "author": self.SELECTORS["list"]["author"],
                 "url": self.SELECTORS["list"]["url"],
             },
             limit=limit,
