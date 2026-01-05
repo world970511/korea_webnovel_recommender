@@ -87,12 +87,12 @@ class KakaoPageCrawler(BaseCrawler):
             wait_time=2.0
         )
 
-        # 2단계: 각 소설의 상세 페이지의 정보탭을 방문하여 추가 정보 수집
-        novels = []
-        for novel_basic in novels_basic:
+        # 2단계: 각 소설의 상세 페이지의 정보탭을 방문하여 추가 정보 수집 (병렬 처리)
+        async def fetch_detail(novel_basic):
+            """단일 상세 페이지 수집"""
             detail_url = novel_basic.get("url")
             if not detail_url:
-                continue
+                return None
 
             # 상대 경로를 절대 경로로 변환
             if detail_url.startswith("/"):
@@ -120,14 +120,22 @@ class KakaoPageCrawler(BaseCrawler):
                 # keywords가 리스트가 아니면 리스트로 변환
                 if isinstance(novel["keywords"], str):
                     novel["keywords"] = [k.strip() for k in novel["keywords"].split(",") if k.strip()]
-                
+
                 # 장르를 키워드에 병합
                 novel["keywords"].extend(novel.get("genre", []))
-                
-                novels.append(self.normalize_novel_data(novel))
+
+                return self.normalize_novel_data(novel)
             except Exception as e:
                 self.logger.warning(f"Failed to extract detail page {detail_url}: {str(e)}")
-                continue
+                return None
+
+        # 병렬로 상세 페이지 수집 (최대 5개씩 동시 처리)
+        batch_size = 5
+        novels = []
+        for i in range(0, len(novels_basic), batch_size):
+            batch = novels_basic[i:i+batch_size]
+            batch_results = await asyncio.gather(*[fetch_detail(novel) for novel in batch])
+            novels.extend([novel for novel in batch_results if novel is not None])
 
         self.log_crawl_summary(novels)
         return novels
@@ -173,12 +181,12 @@ class KakaoPageCrawler(BaseCrawler):
             wait_time=2.0
         )
 
-        # 상세 페이지 정보 수집
-        novels = []
-        for novel_basic in novels_basic:
+        # 상세 페이지 정보 수집 (병렬 처리)
+        async def fetch_detail(novel_basic):
+            """단일 상세 페이지 수집"""
             detail_url = novel_basic.get("url")
             if not detail_url:
-                continue
+                return None
 
             if detail_url.startswith("/"):
                 detail_url = f"https://page.kakao.com{detail_url}"
@@ -204,10 +212,18 @@ class KakaoPageCrawler(BaseCrawler):
                 if isinstance(novel["keywords"], str):
                     novel["keywords"] = [k.strip() for k in novel["keywords"].split(",") if k.strip()]
 
-                novels.append(self.normalize_novel_data(novel))
+                return self.normalize_novel_data(novel)
             except Exception as e:
                 self.logger.warning(f"Failed to extract detail page {detail_url}: {str(e)}")
-                continue
+                return None
+
+        # 병렬로 상세 페이지 수집 (최대 5개씩 동시 처리)
+        batch_size = 5
+        novels = []
+        for i in range(0, len(novels_basic), batch_size):
+            batch = novels_basic[i:i+batch_size]
+            batch_results = await asyncio.gather(*[fetch_detail(novel) for novel in batch])
+            novels.extend([novel for novel in batch_results if novel is not None])
 
         self.log_crawl_summary(novels)
         return novels
