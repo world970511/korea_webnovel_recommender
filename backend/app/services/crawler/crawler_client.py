@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 
-class TraditionalCrawlerClient:
+class CrawlerClient:
     """
-    BeautifulSoup + Playwright Selectors 로 데이터 수집
+    BeautifulSoup + Playwright를 사용한 웹 크롤러 클라이언트
     """
 
     def __init__(self, headless: bool = True):
@@ -133,13 +133,18 @@ class TraditionalCrawlerClient:
             logger.debug(f"Found {len(items)} items on page")
 
             # 각 아이템에서 데이터 추출
-            for item in items:
+            for idx, item in enumerate(items):
                 if len(results) >= limit:
                     break
 
                 data = {}
                 for field, selector in field_selectors.items():
                     data[field] = self._extract_field(item, selector)
+
+                # DEBUG: 첫 번째 아이템 HTML 출력
+                if idx == 0 and len(results) == 0:
+                    logger.info(f"DEBUG: First item HTML:\n{str(item)[:500]}")
+                    logger.info(f"DEBUG: Extracted data: {data}")
 
                 # 중복 체크 (URL 기준)
                 if data.get("url") and not any(r.get("url") == data["url"] for r in results):
@@ -368,7 +373,13 @@ class TraditionalCrawlerClient:
             # 탭 클릭이 필요한 경우
             if tab_selector:
                 try:
-                    tab = await page.query_selector(tab_selector)
+                    # XPath와 CSS Selector 구분하여 처리
+                    if tab_selector.startswith("xpath:"):
+                        xpath_expr = tab_selector[6:]  # "xpath:" 제거
+                        tab = await page.query_selector(f"xpath={xpath_expr}")
+                    else:
+                        tab = await page.query_selector(tab_selector)
+
                     if tab and await tab.is_visible():
                         await tab.click()
                         await asyncio.sleep(wait_after_tab_click)

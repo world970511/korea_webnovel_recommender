@@ -29,7 +29,7 @@ from typing import List, Dict
 sys.path.insert(0, "/home/user/korea_webnovel_recommender")
 
 from app.config import settings
-from app.services.crawler.traditional_crawler_client import TraditionalCrawlerClient
+from app.services.crawler.crawler_client import CrawlerClient
 from app.services.crawler.platforms.naver import NaverSeriesCrawler
 from app.services.crawler.platforms.kakao import KakaoPageCrawler
 from app.services.crawler.platforms.ridi import RidibooksCrawler
@@ -71,7 +71,7 @@ async def crawl_platform(
     logger.info(f"크롤링 시작: platform={platform}, genres={genres}, limit={limit}")
 
     # Playwright 기반 크롤러 클라이언트 초기화
-    client = TraditionalCrawlerClient()
+    client = CrawlerClient()
 
     # 크롤러 클라이언트 사용 가능 여부 확인
     if not client.is_available():
@@ -255,7 +255,7 @@ async def crawl_special(
     logger.info(f"{platform}에서 {mode} 모드로 크롤링 시작")
 
     # Playwright 기반 크롤러 클라이언트 초기화
-    client = TraditionalCrawlerClient()
+    client = CrawlerClient()
 
     if not client.is_available():
         logger.error("Playwright를 사용할 수 없습니다")

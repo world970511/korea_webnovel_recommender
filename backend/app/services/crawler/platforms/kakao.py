@@ -25,8 +25,9 @@ class KakaoPageCrawler(BaseCrawler):
             # 무한 스크롤 리스트 내의 각 작품 링크 (href에 /content/ 포함)
             "item": "a.cursor-pointer[href*='/content/']",
 
-            # 작품 제목 (font-small1 클래스를 가진 div)
-            "title": "div.font-small1",
+            # 작품 제목: aria-label 속성에서 추출 (작품명이 aria-label의 첫 번째 항목)
+            # aria-label="작품, 미친개는 길들여야 제맛이다, ..."
+            "title": "div[aria-label]@aria-label",
 
             # 작품 상세 페이지 URL
             "url": "xpath:.//@href",
@@ -47,7 +48,7 @@ class KakaoPageCrawler(BaseCrawler):
     }
 
     # 정보 탭 selector (카카오 페이지는 상세 페이지에서 정보 탭을 클릭해야 키워드 등이 보임)
-    INFO_TAB_SELECTOR = "xpath://div[contains(@data-t-obj, '\"copy\":\"정보\"')]"
+    INFO_TAB_SELECTOR = "a[href*='tab_type=about']"
 
     def __init__(self, crawler_client):
         """Initialize Kakao Page crawler."""
@@ -95,6 +96,18 @@ class KakaoPageCrawler(BaseCrawler):
             wait_time=2.0
         )
 
+        # aria-label에서 제목 파싱: "작품, 제목, 플랫폼, ..." -> "제목"
+        for novel in novels_basic:
+            aria_label = novel.get("title", "")
+            if aria_label and "," in aria_label:
+                parts = aria_label.split(",")
+                if len(parts) >= 2:
+                    novel["title"] = parts[1].strip()
+                else:
+                    novel["title"] = ""
+            else:
+                novel["title"] = ""
+
         # 2단계: 각 소설의 상세 페이지의 정보탭을 방문하여 추가 정보 수집 (병렬 처리)
         async def fetch_detail(novel_basic):
             """단일 상세 페이지 수집"""
@@ -110,7 +123,7 @@ class KakaoPageCrawler(BaseCrawler):
                 detail_data = await self.client.extract_detail_page(
                     url=detail_url,
                     field_selectors=self.SELECTORS["detail"],
-                    wait_time=1.0,
+                    wait_time=2.0,
                     tab_selector=self.INFO_TAB_SELECTOR,  # 정보 탭 클릭
                     wait_after_tab_click=1.5
                 )
@@ -188,6 +201,23 @@ class KakaoPageCrawler(BaseCrawler):
             wait_time=2.0
         )
 
+        # aria-label에서 제목 파싱: "작품, 제목, 플랫폼, ..." -> "제목"
+        for novel in novels_basic:
+            aria_label = novel.get("title", "")
+            if aria_label and "," in aria_label:
+                parts = aria_label.split(",")
+                if len(parts) >= 2:
+                    novel["title"] = parts[1].strip()
+                else:
+                    novel["title"] = ""
+            else:
+                novel["title"] = ""
+
+        # 디버그: 수집된 기본 데이터 확인
+        self.logger.info(f"DEBUG: Collected {len(novels_basic)} items from list page")
+        if novels_basic:
+            self.logger.info(f"DEBUG: First item sample: {novels_basic[0]}")
+
         # 상세 페이지 정보 수집 (병렬 처리)
         async def fetch_detail(novel_basic):
             """단일 상세 페이지 수집"""
@@ -202,7 +232,7 @@ class KakaoPageCrawler(BaseCrawler):
                 detail_data = await self.client.extract_detail_page(
                     url=detail_url,
                     field_selectors=self.SELECTORS["detail"],
-                    wait_time=1.0,
+                    wait_time=2.0,
                     tab_selector=self.INFO_TAB_SELECTOR,  # 정보 탭 클릭
                     wait_after_tab_click=1.5
                 )
