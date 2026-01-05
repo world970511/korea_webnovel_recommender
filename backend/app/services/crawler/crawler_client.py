@@ -382,8 +382,11 @@ class CrawlerClient:
 
                     if tab and await tab.is_visible():
                         await tab.click()
+                        # 탭 클릭 후 콘텐츠 로딩 대기
                         await asyncio.sleep(wait_after_tab_click)
-                        logger.debug(f"Clicked tab: {tab_selector}")
+                        await page.wait_for_load_state("networkidle", timeout=10000)
+                    else:
+                        logger.debug(f"Tab not found or not visible: {tab_selector}")
                 except Exception as e:
                     logger.warning(f"Failed to click tab {tab_selector}: {str(e)}")
 
@@ -391,7 +394,8 @@ class CrawlerClient:
             soup = BeautifulSoup(html, 'html.parser')
 
             for field, selector in field_selectors.items():
-                result[field] = self._extract_field(soup, selector)
+                value = self._extract_field(soup, selector)
+                result[field] = value
 
         except Exception as e:
             logger.error(f"상세 페이지 추출 실패 ({url}): {str(e)}")

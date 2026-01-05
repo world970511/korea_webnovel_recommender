@@ -33,17 +33,18 @@ class KakaoPageCrawler(BaseCrawler):
             "url": "xpath:.//@href",
         },
         "detail": {
-            # 장르: <span class="break-all align-middle">현판</span>
+            # 장르: <span class="break-all align-middle">웹소설</span>
             "genre": "span.break-all.align-middle",
 
-            # 작가: <span class="font-small2 mb-6pxr text-ellipsis text-el-70 opacity-70 break-word-anywhere line-clamp-2">글먼지</span>
-            "author": "span.font-small2.mb-6pxr.text-ellipsis.text-el-70.opacity-70",
+            # 작가: <span class="font-small2 mb-6pxr text-ellipsis text-el-70 opacity-70 break-word-anywhere line-clamp-2">김시영</span>
+            # opacity-70과 break-word-anywhere의 조합으로 작가 요소 특정
+            "author": "span.opacity-70.break-word-anywhere.line-clamp-2",
 
             # 줄거리: <span class="font-small1 mb-8pxr block whitespace-pre-wrap break-words text-el-70">
-            "description": "span.font-small1.mb-8pxr.block.whitespace-pre-wrap.break-words.text-el-70",
+            "description": "span.font-small1.whitespace-pre-wrap.break-words",
 
-            # 키워드: <span class="font-small2-bold text-ellipsis text-el-70 line-clamp-1">#성장</span> (복수)
-            "keywords": "xpath://span[contains(@class, 'font-small2-bold') and contains(text(), '#')][multiple]",
+            # 키워드: <span class="font-small2-bold text-ellipsis text-el-70 line-clamp-1">#게임</span> (복수)
+            "keywords": "span.font-small2-bold[multiple]",
         }
     }
 
