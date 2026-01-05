@@ -24,6 +24,30 @@ class TraditionalCrawlerClient:
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
 
+    async def start(self):
+        """Start Playwright browser"""
+        if not self.playwright:
+            self.playwright = await async_playwright().start()
+            self.browser = await self.playwright.chromium.launch(headless=self.headless)
+            self.context = await self.browser.new_context()
+            logger.info("Playwright browser started")
+
+    async def stop(self):
+        """Stop Playwright browser"""
+        if self.context:
+            await self.context.close()
+        if self.browser:
+            await self.browser.close()
+        if self.playwright:
+            await self.playwright.stop()
+        logger.info("Playwright browser stopped")
+
+    async def create_page(self) -> Page:
+        """Create a new browser page"""
+        if not self.context:
+            await self.start()
+        return await self.context.new_page()
+
     async def navigate_and_extract(
         self,
         url: str,
@@ -270,11 +294,14 @@ class TraditionalCrawlerClient:
         Returns:
             추출된 값 (문자열 또는 리스트)
         """
-        from lxml import etree, html as lxml_html
-
-        # BeautifulSoup을 lxml로 변환
-        html_str = str(element)
-        tree = lxml_html.fromstring(html_str)
+        try:
+            from lxml import etree, html as lxml_html
+            # BeautifulSoup을 lxml로 변환
+            html_str = str(element)
+            tree = lxml_html.fromstring(html_str)
+        except ImportError:
+            logger.error("lxml is not installed. Install it with: pip install lxml")
+            return "" if "[multiple]" not in xpath else []
 
         # 여러 개 추출
         if "[multiple]" in xpath:

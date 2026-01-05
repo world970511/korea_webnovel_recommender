@@ -175,13 +175,12 @@ class KakaoPageCrawler(BaseCrawler):
         url = self.NOVEL_ALL_CATEGORY_NEW
         self.logger.info(f"Crawling new releases from Kakao Page: {url}")
 
-        # 목록 페이지에서 기본 정보 수집
+        # 목록 페이지에서 기본 정보 수집 (제목과 URL만)
         novels_basic = await self.client.navigate_and_extract(
             url=url,
             list_selector=self.SELECTORS["list"]["item"],
             field_selectors={
                 "title": self.SELECTORS["list"]["title"],
-                "author": self.SELECTORS["list"]["author"],
                 "url": self.SELECTORS["list"]["url"],
             },
             limit=limit,
