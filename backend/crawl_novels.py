@@ -425,6 +425,14 @@ def main():
             logger.info("소설이 데이터베이스에 저장되었습니다.")
         else:
             logger.info("--no-save 옵션으로 데이터베이스에 저장하지 않았습니다.")
+            logger.info("수집한 데이터의 목록을 출력합니다.")
+            for novel in novels:
+                logger.info(f"제목: {novel['title']}")
+                logger.info(f"URL: {novel['url']}")
+                logger.info(f"작가: {novel['author']}")
+                logger.info(f"설명: {novel['description']}")
+                logger.info(f"키워드: {novel['keywords']}")
+                logger.info("-" * 50)
 
     except KeyboardInterrupt:
         logger.info("\n\n사용자에 의해 크롤링이 중단되었습니다")
