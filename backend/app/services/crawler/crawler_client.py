@@ -375,8 +375,12 @@ class CrawlerClient:
                     tab = await page.query_selector(tab_selector)
                     if tab and await tab.is_visible():
                         await tab.click()
+                        # 탭 클릭 후 콘텐츠 로딩 대기
                         await asyncio.sleep(wait_after_tab_click)
+                        await page.wait_for_load_state("networkidle", timeout=10000)
                         logger.debug(f"Clicked tab: {tab_selector}")
+                    else:
+                        logger.debug(f"Tab not found or not visible: {tab_selector}")
                 except Exception as e:
                     logger.warning(f"Failed to click tab {tab_selector}: {str(e)}")
 

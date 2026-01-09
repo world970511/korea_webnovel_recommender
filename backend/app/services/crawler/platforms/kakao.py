@@ -34,16 +34,19 @@ class KakaoPageCrawler(BaseCrawler):
         },
         "detail": {
             # 장르: <span class="break-all align-middle">웹소설</span>
-            "genre": "span.break-all.align-middle",
+            # 더 간단한 셀렉터로 변경 - align-middle만으로도 충분히 특정 가능
+            "genre": "span.align-middle",
 
             # 작가: <span class="font-small2 mb-6pxr text-ellipsis text-el-70 opacity-70 break-word-anywhere line-clamp-2">김시영</span>
-            # opacity-70과 break-word-anywhere의 조합으로 작가 요소 특정
-            "author": "span.opacity-70.break-word-anywhere.line-clamp-2",
+            # opacity-70만으로 간소화 (너무 많은 클래스 조합은 취약)
+            "author": "span.opacity-70",
 
             # 줄거리: <span class="font-small1 mb-8pxr block whitespace-pre-wrap break-words text-el-70">
-            "description": "span.font-small1.whitespace-pre-wrap.break-words",
+            # whitespace-pre-wrap만으로 간소화 (줄거리는 보통 이 속성 사용)
+            "description": "span.whitespace-pre-wrap",
 
             # 키워드: <span class="font-small2-bold text-ellipsis text-el-70 line-clamp-1">#게임</span> (복수)
+            # font-small2-bold로 특정 (# 기호는 텍스트에 포함되므로 필터링은 나중에)
             "keywords": "span.font-small2-bold[multiple]",
         }
     }
@@ -129,10 +132,13 @@ class KakaoPageCrawler(BaseCrawler):
                     wait_after_tab_click=1.5
                 )
 
+                # 디버그: 추출된 상세 데이터 확인
+                self.logger.debug(f"Detail data from {detail_url}: {detail_data}")
+
                 # 병합
                 novel = {
                     "title": novel_basic.get("title", ""),
-                    "author": novel_basic.get("author", ""),
+                    "author": detail_data.get("author", ""),  # ✅ detail_data에서 가져오기
                     "description": detail_data.get("description", ""),
                     "url": detail_url,
                     "keywords": detail_data.get("keywords", []),
@@ -143,8 +149,17 @@ class KakaoPageCrawler(BaseCrawler):
                 if isinstance(novel["keywords"], str):
                     novel["keywords"] = [k.strip() for k in novel["keywords"].split(",") if k.strip()]
 
-                # 장르를 키워드에 병합
-                novel["keywords"].extend(novel.get("genre", []))
+                # # 기호가 있는 키워드만 필터링 (키워드는 보통 # 기호로 시작)
+                if isinstance(novel["keywords"], list):
+                    novel["keywords"] = [k.strip() for k in novel["keywords"] if k.strip().startswith("#")]
+
+                # 장르를 키워드에 병합 (detail_data에서 가져오기)
+                genre = detail_data.get("genre", "")
+                if genre:
+                    if isinstance(genre, str):
+                        novel["keywords"].append(genre.strip())
+                    elif isinstance(genre, list):
+                        novel["keywords"].extend([g.strip() for g in genre if g.strip()])
 
                 return self.normalize_novel_data(novel)
             except Exception as e:
@@ -238,17 +253,33 @@ class KakaoPageCrawler(BaseCrawler):
                     wait_after_tab_click=1.5
                 )
 
+                # 디버그: 추출된 상세 데이터 확인
+                self.logger.debug(f"Detail data from {detail_url}: {detail_data}")
+
                 novel = {
                     "title": novel_basic.get("title", ""),
-                    "author": novel_basic.get("author", ""),
+                    "author": detail_data.get("author", ""),  # ✅ detail_data에서 가져오기
                     "description": detail_data.get("description", ""),
                     "url": detail_url,
                     "keywords": detail_data.get("keywords", []),
                     "platform": self.platform_name
                 }
 
+                # keywords가 리스트가 아니면 리스트로 변환
                 if isinstance(novel["keywords"], str):
                     novel["keywords"] = [k.strip() for k in novel["keywords"].split(",") if k.strip()]
+
+                # # 기호가 있는 키워드만 필터링 (키워드는 보통 # 기호로 시작)
+                if isinstance(novel["keywords"], list):
+                    novel["keywords"] = [k.strip() for k in novel["keywords"] if k.strip().startswith("#")]
+
+                # 장르를 키워드에 병합 (detail_data에서 가져오기)
+                genre = detail_data.get("genre", "")
+                if genre:
+                    if isinstance(genre, str):
+                        novel["keywords"].append(genre.strip())
+                    elif isinstance(genre, list):
+                        novel["keywords"].extend([g.strip() for g in genre if g.strip()])
 
                 return self.normalize_novel_data(novel)
             except Exception as e:
