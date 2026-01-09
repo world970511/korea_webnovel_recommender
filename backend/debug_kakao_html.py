@@ -11,7 +11,7 @@ async def debug_kakao_page():
 
     # 카카오페이지 웹소설 상세 페이지 URL (예시)
     # 실제 URL은 목록 페이지에서 하나를 선택하거나 직접 입력
-    detail_url = "https://page.kakao.com/content/61259304"
+    detail_url = "https://page.kakao.com/content/68327039"
 
     print(f"\n{'='*80}")
     print(f"카카오페이지 HTML 구조 분석 시작")
