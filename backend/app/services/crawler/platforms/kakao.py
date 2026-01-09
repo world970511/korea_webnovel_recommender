@@ -153,13 +153,21 @@ class KakaoPageCrawler(BaseCrawler):
                 if isinstance(novel["keywords"], list):
                     novel["keywords"] = [k.strip() for k in novel["keywords"] if k.strip().startswith("#")]
 
-                # 장르를 키워드에 병합 (detail_data에서 가져오기)
+                # 장르 처리 (detail_data에서 가져오기)
                 genre = detail_data.get("genre", "")
                 if genre:
+                    # genre를 별도 필드로 저장
                     if isinstance(genre, str):
+                        novel["genre"] = genre.strip()
                         novel["keywords"].append(genre.strip())
-                    elif isinstance(genre, list):
+                    elif isinstance(genre, list) and len(genre) > 0:
+                        # 여러 장르 중 첫 번째를 메인 장르로 저장
+                        novel["genre"] = genre[0].strip()
                         novel["keywords"].extend([g.strip() for g in genre if g.strip()])
+                    else:
+                        novel["genre"] = ""
+                else:
+                    novel["genre"] = ""
 
                 return self.normalize_novel_data(novel)
             except Exception as e:
@@ -273,13 +281,21 @@ class KakaoPageCrawler(BaseCrawler):
                 if isinstance(novel["keywords"], list):
                     novel["keywords"] = [k.strip() for k in novel["keywords"] if k.strip().startswith("#")]
 
-                # 장르를 키워드에 병합 (detail_data에서 가져오기)
+                # 장르 처리 (detail_data에서 가져오기)
                 genre = detail_data.get("genre", "")
                 if genre:
+                    # genre를 별도 필드로 저장
                     if isinstance(genre, str):
+                        novel["genre"] = genre.strip()
                         novel["keywords"].append(genre.strip())
-                    elif isinstance(genre, list):
+                    elif isinstance(genre, list) and len(genre) > 0:
+                        # 여러 장르 중 첫 번째를 메인 장르로 저장
+                        novel["genre"] = genre[0].strip()
                         novel["keywords"].extend([g.strip() for g in genre if g.strip()])
+                    else:
+                        novel["genre"] = ""
+                else:
+                    novel["genre"] = ""
 
                 return self.normalize_novel_data(novel)
             except Exception as e:
