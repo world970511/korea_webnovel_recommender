@@ -71,31 +71,42 @@ async def crawl_platform(
     logger.info(f"크롤링 시작: platform={platform}, genres={genres}, limit={limit}")
 
     # Playwright 기반 크롤러 클라이언트 초기화
-    client = CrawlerClient()
+    async with CrawlerClient() as client:
+        # 크롤러 클라이언트 사용 가능 여부 확인
+        if not client.is_available():
+            logger.error("Playwright를 사용할 수 없습니다. 설정을 확인하세요.")
+            logger.info("설치 방법:")
+            logger.info("1. Playwright 설치: pip install playwright")
+            logger.info("2. 브라우저 설치: python -m playwright install chromium")
+            return []
 
-    # 크롤러 클라이언트 사용 가능 여부 확인
-    if not client.is_available():
-        logger.error("Playwright를 사용할 수 없습니다. 설정을 확인하세요.")
-        logger.info("설치 방법:")
-        logger.info("1. Playwright 설치: pip install playwright")
-        logger.info("2. 브라우저 설치: python -m playwright install chromium")
-        return []
+        # 플랫폼별 크롤러 매핑
+        crawlers = {
+            "naver": NaverSeriesCrawler(client),
+            "kakao": KakaoPageCrawler(client),
+            "ridi": RidibooksCrawler(client),
+        }
 
-    # 플랫폼별 크롤러 매핑
-    crawlers = {
-        "naver": NaverSeriesCrawler(client),
-        "kakao": KakaoPageCrawler(client),
-        "ridi": RidibooksCrawler(client),
-    }
+        # 요청한 플랫폼의 크롤러 가져오기
+        crawler = crawlers.get(platform.lower())
+        if not crawler:
+            logger.error(f"알 수 없는 플랫폼: {platform}")
+            logger.info(f"사용 가능한 플랫폼: {', '.join(crawlers.keys())}")
+            return []
 
-    # 요청한 플랫폼의 크롤러 가져오기
-    crawler = crawlers.get(platform.lower())
-    if not crawler:
-        logger.error(f"알 수 없는 플랫폼: {platform}")
-        logger.info(f"사용 가능한 플랫폼: {', '.join(crawlers.keys())}")
-        return []
+        # 크롤링 로직
+        return await _do_crawl_platform(crawler, platform, genres, limit, include_adult, save_to_db)
 
-    # 크롤링 로직
+
+async def _do_crawl_platform(
+    crawler,
+    platform: str,
+    genres: List[str],
+    limit: int,
+    include_adult: bool,
+    save_to_db: bool
+) -> List[Dict]:
+    """실제 크롤링 로직 (CrawlerClient의 async with 블록 내에서 실행)"""
     if not genres:
         # 장르가 지정되지 않은 경우
         if platform == "ridi":
@@ -255,63 +266,62 @@ async def crawl_special(
     logger.info(f"{platform}에서 {mode} 모드로 크롤링 시작")
 
     # Playwright 기반 크롤러 클라이언트 초기화
-    client = CrawlerClient()
-
-    if not client.is_available():
-        logger.error("Playwright를 사용할 수 없습니다")
-        return []
-
-    # 플랫폼별 크롤러 매핑
-    crawlers = {
-        "naver": NaverSeriesCrawler(client),
-        "kakao": KakaoPageCrawler(client),
-        "ridi": RidibooksCrawler(client),
-    }
-
-    crawler = crawlers.get(platform.lower())
-    if not crawler:
-        logger.error(f"알 수 없는 플랫폼: {platform}")
-        return []
-
-    novels = []
-
-    try:
-        # 모드별 크롤링 메서드 호출
-        if mode == "ranking" and hasattr(crawler, "crawl_ranking"):
-            # 실시간 랭킹
-            novels = await crawler.crawl_ranking(limit=limit)
-        elif mode == "bestseller" and hasattr(crawler, "crawl_bestsellers"):
-            # 베스트셀러
-            novels = await crawler.crawl_bestsellers(limit=limit)
-        elif mode == "new" and hasattr(crawler, "crawl_new_releases"):
-            # 신작
-            novels = await crawler.crawl_new_releases(limit=limit)
-        elif mode == "completed" and hasattr(crawler, "crawl_completed_novels"):
-            # 완결작
-            novels = await crawler.crawl_completed_novels(limit=limit)
-        elif mode == "top" and hasattr(crawler, "crawl_top_novels"):
-            # 인기작
-            novels = await crawler.crawl_top_novels(limit=limit)
-        else:
-            logger.error(f"'{mode}' 모드는 {platform}에서 지원하지 않습니다")
+    async with CrawlerClient() as client:
+        if not client.is_available():
+            logger.error("Playwright를 사용할 수 없습니다")
             return []
 
-        # 데이터 정리
-        novels = clean_novel_data(novels)
-        logger.info(f"{len(novels)}개의 소설 수집 완료")
+        # 플랫폼별 크롤러 매핑
+        crawlers = {
+            "naver": NaverSeriesCrawler(client),
+            "kakao": KakaoPageCrawler(client),
+            "ridi": RidibooksCrawler(client),
+        }
 
-        # 데이터베이스 저장
-        if save_to_db and novels:
-            saved_count = await save_crawled_novels(novels)
-            logger.info(f"{saved_count}개의 소설을 데이터베이스에 저장했습니다")
+        crawler = crawlers.get(platform.lower())
+        if not crawler:
+            logger.error(f"알 수 없는 플랫폼: {platform}")
+            return []
 
-        return novels
+        novels = []
 
-    except Exception as e:
-        logger.error(f"{mode} 크롤링 실패: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return []
+        try:
+            # 모드별 크롤링 메서드 호출
+            if mode == "ranking" and hasattr(crawler, "crawl_ranking"):
+                # 실시간 랭킹
+                novels = await crawler.crawl_ranking(limit=limit)
+            elif mode == "bestseller" and hasattr(crawler, "crawl_bestsellers"):
+                # 베스트셀러
+                novels = await crawler.crawl_bestsellers(limit=limit)
+            elif mode == "new" and hasattr(crawler, "crawl_new_releases"):
+                # 신작
+                novels = await crawler.crawl_new_releases(limit=limit)
+            elif mode == "completed" and hasattr(crawler, "crawl_completed_novels"):
+                # 완결작
+                novels = await crawler.crawl_completed_novels(limit=limit)
+            elif mode == "top" and hasattr(crawler, "crawl_top_novels"):
+                # 인기작
+                novels = await crawler.crawl_top_novels(limit=limit)
+            else:
+                logger.error(f"'{mode}' 모드는 {platform}에서 지원하지 않습니다")
+                return []
+
+            # 데이터 정리
+            novels = clean_novel_data(novels)
+            logger.info(f"{len(novels)}개의 소설 수집 완료")
+
+            # 데이터베이스 저장
+            if save_to_db and novels:
+                saved_count = await save_crawled_novels(novels)
+                logger.info(f"{saved_count}개의 소설을 데이터베이스에 저장했습니다")
+
+            return novels
+
+        except Exception as e:
+            logger.error(f"{mode} 크롤링 실패: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return []
 
 
 def main():
